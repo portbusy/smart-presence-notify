@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://github.com/portbusy/smart-presence-notify",
   "issue_tracker": "https://github.com/portbusy/smart-presence-notify/issues",
+  "homeassistant": "2026.1.0",
   "requirements": [],
   "dependencies": [],
   "codeowners": ["@portbusy"],
