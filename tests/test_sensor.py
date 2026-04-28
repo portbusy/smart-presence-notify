@@ -46,4 +46,4 @@ async def test_last_sent_sensor_unknown_initially(
 
     state = hass.states.get("sensor.smart_presence_notify_last_sent")
     assert state is not None
-    assert state.state in ("unknown", "unavailable", "")
+    assert state.state == "unknown"

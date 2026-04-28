@@ -52,6 +52,7 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
         key="last_sent",
         name="Last Sent",
         icon="mdi:bell-check",
+        state_class=None,
         value_fn=lambda data: data.last_sent.title if data.last_sent else None,
         extra_fn=lambda data: (
             {
@@ -93,16 +94,18 @@ class SNPSensorEntity(CoordinatorEntity[SmartPresenceNotifyCoordinator], SensorE
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.data.get("name", "Smart Presence Notify"),
+            name=entry.title,
             manufacturer="Smart Presence Notify",
         )
 
     @property
     def native_value(self) -> StateType:
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        if self.entity_description.extra_fn:
-            return self.entity_description.extra_fn(self.coordinator.data)
-        return None
+        if self.coordinator.data is None or self.entity_description.extra_fn is None:
+            return None
+        return self.entity_description.extra_fn(self.coordinator.data)
