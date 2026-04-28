@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
 from custom_components.smart_presence_notify.const import DOMAIN
 from custom_components.smart_presence_notify.coordinator import (
@@ -66,11 +66,17 @@ async def test_send_broadcast_to_home_persons(hass, mock_config_entry):
     coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
     await coord.async_initialize()
 
-    with patch.object(coord, "_async_call_service", new_callable=AsyncMock) as mock_call:
-        await coord.async_send_notification("Door", "Open", priority="normal")
-        mock_call.assert_called_once_with(
-            "notify.mobile_app_mario", "Door", "Open", {}
-        )
+    # Register mock service for mario
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    await coord.async_send_notification("Door", "Open", priority="normal")
+
+    # Verify service was called with correct data
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Door"
+    assert calls[0].data["message"] == "Open"
+
+    # Verify coordinator recorded the sent notification
     assert coord.data.last_sent.title == "Door"
     assert coord.data.last_sent.recipients == ["notify.mobile_app_mario"]
 
@@ -81,13 +87,17 @@ async def test_send_target_override(hass, mock_config_entry):
     coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
     await coord.async_initialize()
 
-    with patch.object(coord, "_async_call_service", new_callable=AsyncMock) as mock_call:
-        await coord.async_send_notification(
-            "Test", "Msg", target_override="notify.telegram"
-        )
-        mock_call.assert_called_once_with(
-            "notify.telegram", "Test", "Msg", {}
-        )
+    # Register mock service for telegram
+    calls = async_mock_service(hass, "notify", "telegram")
+
+    await coord.async_send_notification(
+        "Test", "Msg", target_override="notify.telegram"
+    )
+
+    # Verify service was called with correct data
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Test"
+    assert calls[0].data["message"] == "Msg"
 
 
 async def test_high_priority_bypasses_queue_sends_to_first_home(hass, mock_config_entry):
@@ -96,9 +106,17 @@ async def test_high_priority_bypasses_queue_sends_to_first_home(hass, mock_confi
     coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
     await coord.async_initialize()
 
-    with patch.object(coord, "_async_call_service", new_callable=AsyncMock) as mock_call:
-        await coord.async_send_notification("Alert", "Fire!", priority="high")
-        mock_call.assert_called_once()
+    # Register mock service for mario
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    await coord.async_send_notification("Alert", "Fire!", priority="high")
+
+    # Verify service was called
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Alert"
+    assert calls[0].data["message"] == "Fire!"
+
+    # Verify queue is empty (high priority bypasses queue)
     assert coord.data.queue == []
 
 
@@ -109,9 +127,17 @@ async def test_normal_priority_nobody_home_enqueues(hass, mock_config_entry):
     coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
     await coord.async_initialize()
 
-    with patch.object(coord, "_async_call_service", new_callable=AsyncMock) as mock_call:
-        await coord.async_send_notification("Door", "Open")
-        mock_call.assert_not_called()
+    # Register mock services (to verify they are NOT called)
+    mario_calls = async_mock_service(hass, "notify", "mobile_app_mario")
+    lucia_calls = async_mock_service(hass, "notify", "mobile_app_lucia")
+
+    await coord.async_send_notification("Door", "Open")
+
+    # Verify no services were called (nobody home, normal priority enqueues)
+    assert len(mario_calls) == 0
+    assert len(lucia_calls) == 0
+
+    # Verify notification was enqueued
     assert len(coord.data.queue) == 1
     assert coord.data.queue[0].title == "Door"
 
@@ -137,8 +163,12 @@ async def test_high_priority_nobody_home_uses_fallback(hass):
     coord = SmartPresenceNotifyCoordinator(hass, entry)
     await coord.async_initialize()
 
-    with patch.object(coord, "_async_call_service", new_callable=AsyncMock) as mock_call:
-        await coord.async_send_notification("Alert", "Fire!", priority="high")
-        mock_call.assert_called_once_with(
-            "notify.telegram", "Alert", "Fire!", {}
-        )
+    # Register mock service for telegram fallback
+    calls = async_mock_service(hass, "notify", "telegram")
+
+    await coord.async_send_notification("Alert", "Fire!", priority="high")
+
+    # Verify fallback service was called with correct data
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Alert"
+    assert calls[0].data["message"] == "Fire!"
