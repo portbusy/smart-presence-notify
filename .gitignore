@@ -1,11 +1,22 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 .pytest_cache/
 .venv/
 venv/
 dist/
 build/
 *.egg-info/
+
+# Env / secrets
 .env
+.env.*
+
+# OS
 .DS_Store
+
+# AI tools
+.claude/
+docs/superpowers/
