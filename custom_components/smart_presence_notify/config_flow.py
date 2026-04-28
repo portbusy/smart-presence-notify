@@ -32,18 +32,16 @@ def _build_global_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         {
             vol.Required("name", default=d.get("name", "Smart Presence Notify")): str,
             vol.Required(CONF_TARGET_MODE, default=d.get(CONF_TARGET_MODE, TargetMode.BROADCAST)): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=[
-                    selector.SelectOptionDict(value=TargetMode.BROADCAST, label="Everyone home"),
-                    selector.SelectOptionDict(value=TargetMode.SINGLE_ADMIN, label="Admin person only"),
-                    selector.SelectOptionDict(value=TargetMode.CALLER_DECIDES, label="Specified in service call"),
-                ])
+                selector.SelectSelectorConfig(
+                    options=[TargetMode.BROADCAST, TargetMode.SINGLE_ADMIN, TargetMode.CALLER_DECIDES],
+                    translation_key="target_mode",
+                )
             ),
             vol.Required(CONF_QUEUE_MODE, default=d.get(CONF_QUEUE_MODE, QueueMode.FIFO)): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=[
-                    selector.SelectOptionDict(value=QueueMode.FIFO, label="All messages, oldest first"),
-                    selector.SelectOptionDict(value=QueueMode.LAST_ONLY, label="Most recent message only"),
-                    selector.SelectOptionDict(value=QueueMode.SUMMARY, label="Summary (one message for all)"),
-                ])
+                selector.SelectSelectorConfig(
+                    options=[QueueMode.FIFO, QueueMode.LAST_ONLY, QueueMode.SUMMARY],
+                    translation_key="queue_mode",
+                )
             ),
             # min=-1 instead of 0: HA 2026.x enforces NumberSelector min at schema level,
             # which would reject -1 before our validator runs. Our handler validates >= 0.
@@ -51,10 +49,10 @@ def _build_global_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 selector.NumberSelectorConfig(min=-1, max=10080, step=1, mode="box")
             ),
             vol.Required(CONF_FALLBACK_MODE, default=d.get(CONF_FALLBACK_MODE, FallbackMode.DISCARD)): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=[
-                    selector.SelectOptionDict(value=FallbackMode.DISCARD, label="Discard silently"),
-                    selector.SelectOptionDict(value=FallbackMode.NOTIFY_FALLBACK, label="Forward to another service"),
-                ])
+                selector.SelectSelectorConfig(
+                    options=[FallbackMode.DISCARD, FallbackMode.NOTIFY_FALLBACK],
+                    translation_key="fallback_mode",
+                )
             ),
             vol.Optional(CONF_FALLBACK_SERVICE, default=d.get(CONF_FALLBACK_SERVICE, "")): str,
         }

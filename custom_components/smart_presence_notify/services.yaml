@@ -16,7 +16,7 @@ send:
         text:
     priority:
       name: Priority
-      description: High priority bypasses the queue and controls device sound/interruption.
+      description: "High priority skips the queue and triggers a device alert. Delivered immediately to the first home member; if nobody is home, uses the fallback service (or queues if no fallback is set)."
       required: false
       default: normal
       selector:
@@ -32,7 +32,7 @@ send:
         text:
     targets:
       name: Targets
-      description: List of notify services to use when target_mode is caller_decides.
+      description: List of notify services to use when 'Set by automation / script' mode is active.
       required: false
       selector:
         object:

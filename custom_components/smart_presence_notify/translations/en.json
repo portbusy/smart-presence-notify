@@ -14,16 +14,16 @@
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
-          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Specified in service call** — your automation or script sets the recipient each time.",
+          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Set by automation / script** — your automation or script sets the recipient each time.",
           "queue_mode": "Applies only when the house was empty and messages were held:\n- **All messages, oldest first** — every held message is delivered in arrival order.\n- **Most recent message only** — only the last message is sent; older ones are discarded.\n- **Summary** — a single message listing the titles of all held messages.",
           "queue_timeout_minutes": "After this many minutes, held messages are considered expired and handled according to the rule below. Set to **0** to hold them indefinitely until someone comes home.",
           "fallback_mode": "What happens when a held message expires:\n- **Discard silently** — the message is deleted with no notification.\n- **Forward to another service** — the message is sent to the service specified below (e.g. a Telegram bot or email), even if nobody is home.",
-          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is selected above."
+          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is chosen."
         }
       },
       "persons": {
         "title": "Who to notify — Service mapping",
-        "description": "For each person tracked in Home Assistant, choose which notification service to use. The **first service** in the list is the primary one.\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
+        "description": "For each person tracked in Home Assistant, choose which notification services to use. All selected services for a person receive the notification (useful for multi-device setups).\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
         "data": {
           "admin_person": "Admin person"
         },
@@ -57,16 +57,16 @@
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
-          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Specified in service call** — your automation or script sets the recipient each time.",
+          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Set by automation / script** — your automation or script sets the recipient each time.",
           "queue_mode": "Applies only when the house was empty and messages were held:\n- **All messages, oldest first** — every held message is delivered in arrival order.\n- **Most recent message only** — only the last message is sent; older ones are discarded.\n- **Summary** — a single message listing the titles of all held messages.",
           "queue_timeout_minutes": "After this many minutes, held messages are considered expired and handled according to the rule below. Set to **0** to hold them indefinitely until someone comes home.",
           "fallback_mode": "What happens when a held message expires:\n- **Discard silently** — the message is deleted with no notification.\n- **Forward to another service** — the message is sent to the service specified below (e.g. a Telegram bot or email), even if nobody is home.",
-          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is selected above."
+          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is chosen."
         }
       },
       "persons": {
         "title": "Who to notify — Service mapping",
-        "description": "For each person tracked in Home Assistant, choose which notification service to use. The **first service** in the list is the primary one.\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
+        "description": "For each person tracked in Home Assistant, choose which notification services to use. All selected services for a person receive the notification (useful for multi-device setups).\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
         "data": {
           "admin_person": "Admin person"
         },
@@ -80,6 +80,28 @@
       "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
       "admin_required": "You must select an admin person when 'Admin person only' mode is active."
+    }
+  },
+  "selector": {
+    "target_mode": {
+      "options": {
+        "broadcast": "Everyone home",
+        "single_admin": "Admin person only",
+        "caller_decides": "Set by automation / script"
+      }
+    },
+    "queue_mode": {
+      "options": {
+        "fifo": "All messages, oldest first",
+        "last_only": "Most recent message only",
+        "summary": "Summary"
+      }
+    },
+    "fallback_mode": {
+      "options": {
+        "discard": "Discard silently",
+        "notify_fallback": "Forward to another service"
+      }
     }
   }
 }

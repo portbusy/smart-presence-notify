@@ -14,16 +14,16 @@
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
-          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Specificato nella chiamata** — la tua automazione o script decide il destinatario di volta in volta.",
+          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Definito dall'automazione / script** — la tua automazione o script decide il destinatario di volta in volta.",
           "queue_mode": "Si applica solo quando la casa era vuota e ci sono messaggi in attesa:\n- **Tutti i messaggi, dal più vecchio** — ogni messaggio in attesa viene recapitato nell'ordine di arrivo.\n- **Solo il più recente** — viene inviato solo l'ultimo messaggio; i precedenti vengono scartati.\n- **Riepilogo** — un unico messaggio che elenca i titoli di tutti i messaggi in attesa.",
           "queue_timeout_minutes": "Dopo questi minuti, i messaggi in attesa vengono considerati scaduti e gestiti dalla regola qui sotto. Imposta **0** per tenerli in attesa indefinitamente fino al rientro di qualcuno.",
           "fallback_mode": "Cosa succede quando un messaggio in attesa scade:\n- **Scarta silenziosamente** — il messaggio viene eliminato senza alcuna notifica.\n- **Inoltra a un altro servizio** — il messaggio viene inviato al servizio indicato sotto (es. bot Telegram o email), anche se nessuno è a casa.",
-          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio' sopra."
+          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio'."
         }
       },
       "persons": {
         "title": "Chi notificare — Abbinamento ai servizi",
-        "description": "Per ogni persona tracciata in Home Assistant, scegli quale servizio notify usare. Il **primo servizio** della lista è quello principale.\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
+        "description": "Per ogni persona tracciata in Home Assistant, scegli quali servizi notify usare. Tutti i servizi selezionati per una persona ricevono la notifica (utile per configurazioni multi-dispositivo).\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
         "data": {
           "admin_person": "Persona admin"
         },
@@ -57,16 +57,16 @@
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
-          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Specificato nella chiamata** — la tua automazione o script decide il destinatario di volta in volta.",
+          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Definito dall'automazione / script** — la tua automazione o script decide il destinatario di volta in volta.",
           "queue_mode": "Si applica solo quando la casa era vuota e ci sono messaggi in attesa:\n- **Tutti i messaggi, dal più vecchio** — ogni messaggio in attesa viene recapitato nell'ordine di arrivo.\n- **Solo il più recente** — viene inviato solo l'ultimo messaggio; i precedenti vengono scartati.\n- **Riepilogo** — un unico messaggio che elenca i titoli di tutti i messaggi in attesa.",
           "queue_timeout_minutes": "Dopo questi minuti, i messaggi in attesa vengono considerati scaduti e gestiti dalla regola qui sotto. Imposta **0** per tenerli in attesa indefinitamente fino al rientro di qualcuno.",
           "fallback_mode": "Cosa succede quando un messaggio in attesa scade:\n- **Scarta silenziosamente** — il messaggio viene eliminato senza alcuna notifica.\n- **Inoltra a un altro servizio** — il messaggio viene inviato al servizio indicato sotto (es. bot Telegram o email), anche se nessuno è a casa.",
-          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio' sopra."
+          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio'."
         }
       },
       "persons": {
         "title": "Chi notificare — Abbinamento ai servizi",
-        "description": "Per ogni persona tracciata in Home Assistant, scegli quale servizio notify usare. Il **primo servizio** della lista è quello principale.\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
+        "description": "Per ogni persona tracciata in Home Assistant, scegli quali servizi notify usare. Tutti i servizi selezionati per una persona ricevono la notifica (utile per configurazioni multi-dispositivo).\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
         "data": {
           "admin_person": "Persona admin"
         },
@@ -80,6 +80,28 @@
       "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
       "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'."
+    }
+  },
+  "selector": {
+    "target_mode": {
+      "options": {
+        "broadcast": "Tutti i presenti",
+        "single_admin": "Solo la persona admin",
+        "caller_decides": "Definito dall'automazione / script"
+      }
+    },
+    "queue_mode": {
+      "options": {
+        "fifo": "Tutti i messaggi, dal più vecchio",
+        "last_only": "Solo il più recente",
+        "summary": "Riepilogo"
+      }
+    },
+    "fallback_mode": {
+      "options": {
+        "discard": "Scarta silenziosamente",
+        "notify_fallback": "Inoltra a un altro servizio"
+      }
     }
   }
 }
