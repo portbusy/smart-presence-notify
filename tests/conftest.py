@@ -12,6 +12,12 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 DOMAIN = "smart_presence_notify"
 
 
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations for all tests."""
+    return
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(

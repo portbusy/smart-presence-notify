@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Global Settings",
+        "data": {
+          "name": "Integration Name",
+          "target_mode": "Target Mode",
+          "queue_mode": "Queue Mode",
+          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
+          "fallback_mode": "Timeout Fallback",
+          "fallback_service": "Fallback Notify Service"
+        }
+      },
+      "persons": {
+        "title": "Person — Notify Mapping",
+        "description": "Select one or more notify services for each person. The first service is the primary device.",
+        "data": {
+          "admin_person": "Admin Person (receives notifications when target mode is single admin)"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Timeout must be 0 or greater",
+      "fallback_service_required": "Fallback service is required when fallback mode is notify_fallback",
+      "no_persons": "At least one person with a notify service must be configured",
+      "admin_required": "Exactly one admin must be selected in single_admin mode"
+    },
+    "abort": {
+      "already_configured": "Integration is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Update Global Settings",
+        "data": {
+          "name": "Integration Name",
+          "target_mode": "Target Mode",
+          "queue_mode": "Queue Mode",
+          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
+          "fallback_mode": "Timeout Fallback",
+          "fallback_service": "Fallback Notify Service"
+        }
+      },
+      "persons": {
+        "title": "Update Person — Notify Mapping",
+        "data": {
+          "admin_person": "Admin Person"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Timeout must be 0 or greater",
+      "fallback_service_required": "Fallback service is required when fallback mode is notify_fallback",
+      "no_persons": "At least one person with a notify service must be configured",
+      "admin_required": "Exactly one admin must be selected in single_admin mode"
+    }
+  }
+}
