@@ -5,7 +5,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.smart_presence_notify.const import DOMAIN
+from custom_components.smart_presence_notify.models import SNPRuntimeData
 
 
 async def test_setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
@@ -13,6 +13,8 @@ async def test_setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEnt
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state.name == "LOADED"
+    assert isinstance(mock_config_entry.runtime_data, SNPRuntimeData)
+    assert mock_config_entry.runtime_data.coordinator is not None
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry):

@@ -9,5 +9,5 @@ async def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> No
     pass
 
 
-def async_unregister_services(hass: HomeAssistant) -> None:
+def unregister_services(hass: HomeAssistant) -> None:
     pass

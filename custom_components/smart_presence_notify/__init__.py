@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .const import PLATFORMS
 from .coordinator import SmartPresenceNotifyCoordinator
 from .models import SNPRuntimeData
-from .services import async_register_services, async_unregister_services
+from .services import async_register_services, unregister_services
 
 type SNPConfigEntry = ConfigEntry[SNPRuntimeData]
 
@@ -22,7 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> bool:
-    coordinator: SmartPresenceNotifyCoordinator = entry.runtime_data.coordinator
-    await coordinator.async_shutdown()
-    async_unregister_services(hass)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if ok:
+        coordinator: SmartPresenceNotifyCoordinator = entry.runtime_data.coordinator
+        await coordinator.async_shutdown()
+        unregister_services(hass)
+    return ok
