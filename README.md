@@ -44,9 +44,9 @@ data:
 
 | Entity | Description |
 |--------|-------------|
-| `sensor.snp_queue_count` | Number of pending notifications |
-| `sensor.snp_last_sent` | Title of the last sent notification |
-| `binary_sensor.snp_someone_home` | Whether anyone is currently home |
+| `sensor.smart_presence_notify_queue_count` | Number of pending notifications |
+| `sensor.smart_presence_notify_last_sent` | Title of the last sent notification |
+| `binary_sensor.smart_presence_notify_someone_home` | Whether anyone is currently home |
 
 ## License
 

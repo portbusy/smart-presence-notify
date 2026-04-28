@@ -182,7 +182,11 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
 
             if not errors:
                 new_data = {**self.config_entry.data, **self._global_data, CONF_PERSONS: persons}
-                self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=new_data,
+                    title=new_data.get("name", self.config_entry.title),
+                )
                 return self.async_create_entry(title="", data={})
 
         schema = _build_persons_schema(
