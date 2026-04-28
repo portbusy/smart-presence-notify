@@ -172,3 +172,97 @@ async def test_high_priority_nobody_home_uses_fallback(hass):
     assert len(calls) == 1
     assert calls[0].data["title"] == "Alert"
     assert calls[0].data["message"] == "Fire!"
+
+
+async def test_drain_fifo_on_arrival(hass, mock_config_entry):
+    hass.states.async_set("person.mario", "not_home")
+    hass.states.async_set("person.lucia", "not_home")
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    # Enqueue two notifications
+    await coord.async_send_notification("Msg1", "Body1")
+    await coord.async_send_notification("Msg2", "Body2")
+    assert len(coord.data.queue) == 2
+
+    # Register notify service for mario
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    # Mario arrives home — should drain FIFO
+    with patch("asyncio.sleep", new_callable=AsyncMock):
+        hass.states.async_set("person.mario", "home")
+        await hass.async_block_till_done()
+
+    assert coord.data.queue == []
+    assert len(calls) == 2
+    assert calls[0].data["title"] == "Msg1"
+    assert calls[1].data["title"] == "Msg2"
+
+
+async def test_drain_last_only_on_arrival(hass):
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "last_only",
+            "queue_timeout_minutes": 0,
+            "fallback_mode": "discard",
+            "fallback_service": "",
+            "persons": {
+                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
+            },
+        },
+    )
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("First", "B1")
+    await coord.async_send_notification("Last", "B2")
+
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    hass.states.async_set("person.mario", "home")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Last"
+
+
+async def test_drain_summary_on_arrival(hass):
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "summary",
+            "queue_timeout_minutes": 0,
+            "fallback_mode": "discard",
+            "fallback_service": "",
+            "persons": {
+                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
+            },
+        },
+    )
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Door", "Open")
+    await coord.async_send_notification("Window", "Open")
+
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    hass.states.async_set("person.mario", "home")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert "2 messages" in calls[0].data["message"]
+    assert "Door" in calls[0].data["message"]
+    assert "Window" in calls[0].data["message"]
