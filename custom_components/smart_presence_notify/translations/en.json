@@ -1,0 +1,66 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Global Settings",
+        "data": {
+          "name": "Integration Name",
+          "target_mode": "Target Mode",
+          "queue_mode": "Queue Mode",
+          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
+          "fallback_mode": "Timeout Fallback",
+          "fallback_service": "Fallback Notify Service"
+        },
+        "data_description": {
+          "fallback_service": "Required only when Timeout Fallback is set to notify_fallback. Example: notify.telegram"
+        }
+      },
+      "persons": {
+        "title": "Person — Notify Mapping",
+        "description": "Select one or more notify services for each person. The first selected service is the primary device.",
+        "data": {
+          "admin_person": "Admin Person"
+        },
+        "data_description": {
+          "admin_person": "Required only in single_admin mode. This person receives all notifications when home."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Timeout must be 0 or greater.",
+      "fallback_service_required": "A fallback service is required when Timeout Fallback is set to notify_fallback.",
+      "no_persons": "At least one person with a notify service must be configured.",
+      "admin_required": "Exactly one admin must be selected when Target Mode is single_admin."
+    },
+    "abort": {
+      "already_configured": "Smart Presence Notify is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Update Global Settings",
+        "data": {
+          "name": "Integration Name",
+          "target_mode": "Target Mode",
+          "queue_mode": "Queue Mode",
+          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
+          "fallback_mode": "Timeout Fallback",
+          "fallback_service": "Fallback Notify Service"
+        }
+      },
+      "persons": {
+        "title": "Update Person — Notify Mapping",
+        "data": {
+          "admin_person": "Admin Person"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Timeout must be 0 or greater.",
+      "fallback_service_required": "A fallback service is required when Timeout Fallback is set to notify_fallback.",
+      "no_persons": "At least one person with a notify service must be configured.",
+      "admin_required": "Exactly one admin must be selected when Target Mode is single_admin."
+    }
+  }
+}

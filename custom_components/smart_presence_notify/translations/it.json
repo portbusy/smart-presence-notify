@@ -1,0 +1,66 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Impostazioni Globali",
+        "data": {
+          "name": "Nome Integrazione",
+          "target_mode": "Modalità Destinatario",
+          "queue_mode": "Modalità Coda",
+          "queue_timeout_minutes": "Timeout Coda (minuti, 0 = disabilitato)",
+          "fallback_mode": "Fallback Timeout",
+          "fallback_service": "Servizio Notify Fallback"
+        },
+        "data_description": {
+          "fallback_service": "Richiesto solo se il Fallback Timeout è impostato su notify_fallback. Esempio: notify.telegram"
+        }
+      },
+      "persons": {
+        "title": "Mappatura Persona — Notify",
+        "description": "Seleziona uno o più servizi notify per ogni persona. Il primo è il dispositivo principale.",
+        "data": {
+          "admin_person": "Persona Admin"
+        },
+        "data_description": {
+          "admin_person": "Richiesto solo in modalità single_admin. Questa persona riceve tutte le notifiche quando è a casa."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Il timeout deve essere 0 o maggiore.",
+      "fallback_service_required": "Un servizio fallback è richiesto quando il Fallback Timeout è notify_fallback.",
+      "no_persons": "Almeno una persona con un servizio notify deve essere configurata.",
+      "admin_required": "Deve essere selezionato esattamente un admin in modalità single_admin."
+    },
+    "abort": {
+      "already_configured": "Smart Presence Notify è già configurato."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Aggiorna Impostazioni Globali",
+        "data": {
+          "name": "Nome Integrazione",
+          "target_mode": "Modalità Destinatario",
+          "queue_mode": "Modalità Coda",
+          "queue_timeout_minutes": "Timeout Coda (minuti, 0 = disabilitato)",
+          "fallback_mode": "Fallback Timeout",
+          "fallback_service": "Servizio Notify Fallback"
+        }
+      },
+      "persons": {
+        "title": "Aggiorna Mappatura Persona — Notify",
+        "data": {
+          "admin_person": "Persona Admin"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Il timeout deve essere 0 o maggiore.",
+      "fallback_service_required": "Un servizio fallback è richiesto quando il Fallback Timeout è notify_fallback.",
+      "no_persons": "Almeno una persona con un servizio notify deve essere configurata.",
+      "admin_required": "Deve essere selezionato esattamente un admin in modalità single_admin."
+    }
+  }
+}
