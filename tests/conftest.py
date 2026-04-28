@@ -11,6 +11,33 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 
 DOMAIN = "smart_presence_notify"
 
+_DEFAULT_PERSONS_MARIO_ONLY = {
+    "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True},
+}
+
+
+def make_entry(
+    *,
+    queue_mode: str = "fifo",
+    queue_timeout_minutes: int = 0,
+    fallback_mode: str = "discard",
+    fallback_service: str = "",
+    target_mode: str = "broadcast",
+    persons: dict | None = None,
+) -> MockConfigEntry:
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": target_mode,
+            "queue_mode": queue_mode,
+            "queue_timeout_minutes": queue_timeout_minutes,
+            "fallback_mode": fallback_mode,
+            "fallback_service": fallback_service,
+            "persons": persons if persons is not None else _DEFAULT_PERSONS_MARIO_ONLY,
+        },
+    )
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
