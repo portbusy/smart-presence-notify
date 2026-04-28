@@ -224,12 +224,20 @@ def _build_persons_schema(
         current_admin = next(
             (eid for eid, p in defaults.items() if p.get(CONF_IS_ADMIN)), None
         )
-        schema[vol.Required(CONF_ADMIN_PERSON, default=current_admin)] = selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=person_entities,
-                multiple=False,
+        if current_admin:
+            schema[vol.Optional(CONF_ADMIN_PERSON, default=current_admin)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=person_entities,
+                    multiple=False,
+                )
             )
-        )
+        else:
+            schema[vol.Optional(CONF_ADMIN_PERSON)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=person_entities,
+                    multiple=False,
+                )
+            )
 
     return vol.Schema(schema)
 
