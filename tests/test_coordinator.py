@@ -7,10 +7,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
-from custom_components.smart_presence_notify.const import DOMAIN
-from custom_components.smart_presence_notify.coordinator import (
-    SmartPresenceNotifyCoordinator,
-)
+from custom_components.smart_presence_notify.coordinator import SmartPresenceNotifyCoordinator
+from tests.conftest import make_entry
 
 
 @pytest.fixture
@@ -142,21 +140,7 @@ async def test_normal_priority_nobody_home_enqueues(hass, mock_config_entry):
 
 
 async def test_high_priority_nobody_home_uses_fallback(hass):
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "fifo",
-            "queue_timeout_minutes": 0,
-            "fallback_mode": "notify_fallback",
-            "fallback_service": "notify.telegram",
-            "persons": {
-                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
-            },
-        },
-    )
+    entry = make_entry(fallback_mode="notify_fallback", fallback_service="notify.telegram")
     hass.states.async_set("person.mario", "not_home")
     entry.add_to_hass(hass)
     coord = SmartPresenceNotifyCoordinator(hass, entry)
@@ -204,21 +188,7 @@ async def test_drain_fifo_on_arrival(hass, mock_config_entry):
 
 
 async def test_drain_last_only_on_arrival(hass):
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "last_only",
-            "queue_timeout_minutes": 0,
-            "fallback_mode": "discard",
-            "fallback_service": "",
-            "persons": {
-                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
-            },
-        },
-    )
+    entry = make_entry(queue_mode="last_only")
     hass.states.async_set("person.mario", "not_home")
     entry.add_to_hass(hass)
     coord = SmartPresenceNotifyCoordinator(hass, entry)
@@ -241,21 +211,7 @@ async def test_drain_last_only_on_arrival(hass):
 
 
 async def test_drain_summary_on_arrival(hass):
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "summary",
-            "queue_timeout_minutes": 0,
-            "fallback_mode": "discard",
-            "fallback_service": "",
-            "persons": {
-                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
-            },
-        },
-    )
+    entry = make_entry(queue_mode="summary")
     hass.states.async_set("person.mario", "not_home")
     entry.add_to_hass(hass)
     coord = SmartPresenceNotifyCoordinator(hass, entry)
@@ -280,21 +236,7 @@ async def test_drain_summary_on_arrival(hass):
 
 
 async def test_notification_expires_discard(hass):
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "fifo",
-            "queue_timeout_minutes": 60,
-            "fallback_mode": "discard",
-            "fallback_service": "",
-            "persons": {
-                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
-            },
-        },
-    )
+    entry = make_entry(queue_timeout_minutes=60)
     hass.states.async_set("person.mario", "not_home")
     entry.add_to_hass(hass)
     coord = SmartPresenceNotifyCoordinator(hass, entry)
@@ -314,21 +256,7 @@ async def test_notification_expires_discard(hass):
 
 
 async def test_notification_expires_with_fallback(hass):
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "fifo",
-            "queue_timeout_minutes": 60,
-            "fallback_mode": "notify_fallback",
-            "fallback_service": "notify.telegram",
-            "persons": {
-                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
-            },
-        },
-    )
+    entry = make_entry(queue_timeout_minutes=60, fallback_mode="notify_fallback", fallback_service="notify.telegram")
     hass.states.async_set("person.mario", "not_home")
     entry.add_to_hass(hass)
     coord = SmartPresenceNotifyCoordinator(hass, entry)
@@ -348,26 +276,10 @@ async def test_notification_expires_with_fallback(hass):
 
 async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):
     """Queue must not be drained when arrived person has no notify_services."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "name": "Test",
-            "target_mode": "broadcast",
-            "queue_mode": "fifo",
-            "queue_timeout_minutes": 0,
-            "fallback_mode": "discard",
-            "fallback_service": "",
-            "persons": {
-                # Mario has notify services, Guest is configured but has none
-                "person.mario": {
-                    "notify_services": ["notify.mobile_app_mario"],
-                    "is_admin": True,
-                },
-                "person.guest": {"notify_services": [], "is_admin": False},
-            },
-        },
-    )
+    entry = make_entry(persons={
+        "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True},
+        "person.guest": {"notify_services": [], "is_admin": False},
+    })
     hass.states.async_set("person.mario", "not_home")
     hass.states.async_set("person.guest", "not_home")
     entry.add_to_hass(hass)
