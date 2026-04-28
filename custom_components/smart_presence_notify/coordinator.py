@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
@@ -76,8 +77,8 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         home_persons = [
             entity_id
             for entity_id in configured_persons
-            if self.hass.states.get(entity_id) is not None
-            and self.hass.states.get(entity_id).state == "home"
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state == "home"
         ]
         return bool(home_persons), home_persons
 
@@ -225,7 +226,6 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _enqueue(
         self, title: str, message: str, priority: str, extra: dict
     ) -> None:
-        import uuid
         timeout_minutes = self._entry.data.get(CONF_QUEUE_TIMEOUT, 0)
         now = datetime.now(timezone.utc)
         expires_at = (
@@ -266,28 +266,30 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         queue_mode = self._entry.data.get(CONF_QUEUE_MODE, QueueMode.FIFO)
         recipients = self._get_notify_services_for_person(arrived_person)
 
-        if queue_mode == QueueMode.LAST_ONLY:
-            to_send = [queue[-1]]
-        else:
-            to_send = queue
-
         if queue_mode == QueueMode.SUMMARY:
-            titles = ", ".join(n.title for n in to_send)
-            summary_msg = f"{len(to_send)} messages while you were away: {titles}"
+            titles = ", ".join(n.title for n in queue)
+            summary_msg = f"{len(queue)} messages while you were away: {titles}"
             for service_full in recipients:
                 await self._async_call_service(
                     service_full, "Missed notifications", summary_msg, {}
                 )
             last_title = "Missed notifications"
-        else:
-            last_title = to_send[-1].title
-            for i, notif in enumerate(to_send):
+        elif queue_mode == QueueMode.LAST_ONLY:
+            notif = queue[-1]
+            for service_full in recipients:
+                await self._async_call_service(
+                    service_full, notif.title, notif.message, notif.extra_data
+                )
+            last_title = notif.title
+        else:  # FIFO
+            for i, notif in enumerate(queue):
                 for service_full in recipients:
                     await self._async_call_service(
                         service_full, notif.title, notif.message, notif.extra_data
                     )
-                if i < len(to_send) - 1:
+                if i < len(queue) - 1:
                     await asyncio.sleep(1)
+            last_title = queue[-1].title
 
         for notif in queue:
             if notif.id in self._timeout_unsubs:
