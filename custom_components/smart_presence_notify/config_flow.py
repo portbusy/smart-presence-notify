@@ -35,6 +35,8 @@ def _build_global_schema(defaults: dict | None = None) -> vol.Schema:
             vol.Required(CONF_QUEUE_MODE, default=d.get(CONF_QUEUE_MODE, QueueMode.FIFO)): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=[m.value for m in QueueMode])
             ),
+            # min=-1 instead of 0: HA 2026.x enforces NumberSelector min at schema level,
+            # which would reject -1 before our validator runs. Our handler validates >= 0.
             vol.Required(CONF_QUEUE_TIMEOUT, default=d.get(CONF_QUEUE_TIMEOUT, 0)): selector.NumberSelector(
                 selector.NumberSelectorConfig(min=-1, max=10080, step=1, mode="box")
             ),
