@@ -3,40 +3,40 @@
     "step": {
       "user": {
         "title": "Smart Presence Notify — General Settings",
-        "description": "Configure how notifications are delivered based on who is home, and what happens when nobody is home.",
+        "description": "Smart Presence Notify sends notifications only when someone is home. If the house is empty, incoming messages are held and delivered when someone arrives. Configure who gets notified and how held messages are managed.",
         "data": {
           "name": "Display name",
-          "target_mode": "Who receives notifications when someone is home?",
-          "queue_mode": "What to deliver when someone returns home?",
-          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
-          "fallback_mode": "What to do when a queued notification expires?",
-          "fallback_service": "Fallback notify service"
+          "target_mode": "Who gets notified when someone is home?",
+          "queue_mode": "When someone arrives home, which held messages to send?",
+          "queue_timeout_minutes": "Hold messages for up to (minutes, 0 = indefinitely)",
+          "fallback_mode": "What to do with expired messages?",
+          "fallback_service": "Forward expired messages to this service"
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
-          "target_mode": "Everyone home / Admin only / Caller decides",
-          "queue_mode": "All in order / Last only / Summary",
-          "queue_timeout_minutes": "Set to 0 to never expire queued notifications.",
-          "fallback_mode": "Discard / Send to fallback service",
-          "fallback_service": "Required only when 'Send to fallback service' is selected. Example: notify.telegram"
+          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Specified in service call** — your automation or script sets the recipient each time.",
+          "queue_mode": "Applies only when the house was empty and messages were held:\n- **All messages, oldest first** — every held message is delivered in arrival order.\n- **Most recent message only** — only the last message is sent; older ones are discarded.\n- **Summary** — a single message listing the titles of all held messages.",
+          "queue_timeout_minutes": "After this many minutes, held messages are considered expired and handled according to the rule below. Set to **0** to hold them indefinitely until someone comes home.",
+          "fallback_mode": "What happens when a held message expires:\n- **Discard silently** — the message is deleted with no notification.\n- **Forward to another service** — the message is sent to the service specified below (e.g. a Telegram bot or email), even if nobody is home.",
+          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is selected above."
         }
       },
       "persons": {
-        "title": "Person → Notify Service Mapping",
-        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The first service is the primary device. Leave a person empty to exclude them.",
+        "title": "Who to notify — Service mapping",
+        "description": "For each person tracked in Home Assistant, choose which notification service to use. The **first service** in the list is the primary one.\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
         "data": {
           "admin_person": "Admin person"
         },
         "data_description": {
-          "admin_person": "Required only in Admin only mode. If admin is away, the first person home receives the notification."
+          "admin_person": "The household member who always receives notifications in 'Admin person only' mode. If this person is away, the first person who arrives home gets the notification instead."
         }
       }
     },
     "error": {
       "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
-      "fallback_service_required": "You must specify a fallback notify service when 'Send to fallback service' is selected.",
+      "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
-      "admin_required": "You must select exactly one admin when 'Admin only' mode is active."
+      "admin_required": "You must select an admin person when 'Admin person only' mode is active."
     },
     "abort": {
       "already_configured": "Smart Presence Notify is already set up. Use the Configure button to change settings."
@@ -46,40 +46,40 @@
     "step": {
       "user": {
         "title": "Smart Presence Notify — General Settings",
-        "description": "Update how notifications are delivered based on who is home, and what happens when nobody is home.",
+        "description": "Smart Presence Notify sends notifications only when someone is home. If the house is empty, incoming messages are held and delivered when someone arrives. Update who gets notified and how held messages are managed.",
         "data": {
           "name": "Display name",
-          "target_mode": "Who receives notifications when someone is home?",
-          "queue_mode": "What to deliver when someone returns home?",
-          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
-          "fallback_mode": "What to do when a queued notification expires?",
-          "fallback_service": "Fallback notify service"
+          "target_mode": "Who gets notified when someone is home?",
+          "queue_mode": "When someone arrives home, which held messages to send?",
+          "queue_timeout_minutes": "Hold messages for up to (minutes, 0 = indefinitely)",
+          "fallback_mode": "What to do with expired messages?",
+          "fallback_service": "Forward expired messages to this service"
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
-          "target_mode": "Everyone home / Admin only / Caller decides",
-          "queue_mode": "All in order / Last only / Summary",
-          "queue_timeout_minutes": "Set to 0 to never expire queued notifications.",
-          "fallback_mode": "Discard / Send to fallback service",
-          "fallback_service": "Required only when 'Send to fallback service' is selected. Example: notify.telegram"
+          "target_mode": "Choose who receives each notification while someone is home:\n- **Everyone home** — all household members currently at home.\n- **Admin person only** — only the designated admin; if away, the first person to arrive home gets it.\n- **Specified in service call** — your automation or script sets the recipient each time.",
+          "queue_mode": "Applies only when the house was empty and messages were held:\n- **All messages, oldest first** — every held message is delivered in arrival order.\n- **Most recent message only** — only the last message is sent; older ones are discarded.\n- **Summary** — a single message listing the titles of all held messages.",
+          "queue_timeout_minutes": "After this many minutes, held messages are considered expired and handled according to the rule below. Set to **0** to hold them indefinitely until someone comes home.",
+          "fallback_mode": "What happens when a held message expires:\n- **Discard silently** — the message is deleted with no notification.\n- **Forward to another service** — the message is sent to the service specified below (e.g. a Telegram bot or email), even if nobody is home.",
+          "fallback_service": "The notify service that receives expired messages (e.g. `notify.telegram`). Required only when 'Forward to another service' is selected above."
         }
       },
       "persons": {
-        "title": "Person → Notify Service Mapping",
-        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The first service is the primary device. Leave a person empty to exclude them.",
+        "title": "Who to notify — Service mapping",
+        "description": "For each person tracked in Home Assistant, choose which notification service to use. The **first service** in the list is the primary one.\n\nLeave a person without a service to exclude them from Smart Presence Notify.",
         "data": {
           "admin_person": "Admin person"
         },
         "data_description": {
-          "admin_person": "Required only in Admin only mode. If admin is away, the first person home receives the notification."
+          "admin_person": "The household member who always receives notifications in 'Admin person only' mode. If this person is away, the first person who arrives home gets the notification instead."
         }
       }
     },
     "error": {
       "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
-      "fallback_service_required": "You must specify a fallback notify service when 'Send to fallback service' is selected.",
+      "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
-      "admin_required": "You must select exactly one admin when 'Admin only' mode is active."
+      "admin_required": "You must select an admin person when 'Admin person only' mode is active."
     }
   }
 }

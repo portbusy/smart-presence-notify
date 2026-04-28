@@ -3,40 +3,40 @@
     "step": {
       "user": {
         "title": "Smart Presence Notify — Impostazioni generali",
-        "description": "Configura come vengono recapitate le notifiche in base a chi è a casa, e cosa succede quando non c'è nessuno.",
+        "description": "Smart Presence Notify invia notifiche solo quando qualcuno è a casa. Se la casa è vuota, i messaggi in arrivo vengono messi in attesa e recapitati al rientro di qualcuno. Configura chi riceve le notifiche e come vengono gestiti i messaggi in attesa.",
         "data": {
           "name": "Nome visualizzato",
           "target_mode": "Chi riceve le notifiche quando qualcuno è a casa?",
-          "queue_mode": "Cosa recapitare quando qualcuno torna a casa?",
-          "queue_timeout_minutes": "Scarta le notifiche in coda dopo (minuti)",
-          "fallback_mode": "Cosa fare quando una notifica in coda scade?",
-          "fallback_service": "Servizio notify di fallback"
+          "queue_mode": "Quando qualcuno rientra, quali messaggi in attesa inviare?",
+          "queue_timeout_minutes": "Tieni i messaggi in attesa per (minuti, 0 = illimitato)",
+          "fallback_mode": "Cosa fare con i messaggi scaduti?",
+          "fallback_service": "Inoltra i messaggi scaduti a questo servizio"
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
-          "target_mode": "**Tutti i presenti** — la notifica viene inviata a tutti i membri della famiglia attualmente a casa.\n**Solo l'admin** — la riceve solo la persona designata come admin; se è assente, la riceve il primo che rientra.\n**Decido io** — specifichi i destinatari ad ogni chiamata al servizio tramite il campo `targets`.",
-          "queue_mode": "Si applica quando qualcuno rientra a casa e ci sono notifiche in attesa.\n**Tutte in ordine** — ogni notifica in coda viene recapitata una per una, dalla più vecchia alla più recente.\n**Solo l'ultima** — viene recapitata solo la notifica più recente; le altre vengono scartate.\n**Riepilogo** — un unico messaggio che elenca i titoli di tutte le notifiche in coda.",
-          "queue_timeout_minutes": "Le notifiche in coda da più tempo di questo valore vengono gestite automaticamente secondo l'azione di scadenza qui sotto. Imposta **0** per non far mai scadere le notifiche.",
-          "fallback_mode": "**Scarta** — le notifiche scadute vengono eliminate silenziosamente.\n**Invia al servizio di fallback** — le notifiche scadute vengono inoltrate al servizio specificato sotto (es. un bot Telegram o email).",
-          "fallback_service": "Il servizio notify da usare quando una notifica scade (es. `notify.telegram`). Richiesto solo se hai selezionato \"Invia al servizio di fallback\" sopra."
+          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Specificato nella chiamata** — la tua automazione o script decide il destinatario di volta in volta.",
+          "queue_mode": "Si applica solo quando la casa era vuota e ci sono messaggi in attesa:\n- **Tutti i messaggi, dal più vecchio** — ogni messaggio in attesa viene recapitato nell'ordine di arrivo.\n- **Solo il più recente** — viene inviato solo l'ultimo messaggio; i precedenti vengono scartati.\n- **Riepilogo** — un unico messaggio che elenca i titoli di tutti i messaggi in attesa.",
+          "queue_timeout_minutes": "Dopo questi minuti, i messaggi in attesa vengono considerati scaduti e gestiti dalla regola qui sotto. Imposta **0** per tenerli in attesa indefinitamente fino al rientro di qualcuno.",
+          "fallback_mode": "Cosa succede quando un messaggio in attesa scade:\n- **Scarta silenziosamente** — il messaggio viene eliminato senza alcuna notifica.\n- **Inoltra a un altro servizio** — il messaggio viene inviato al servizio indicato sotto (es. bot Telegram o email), anche se nessuno è a casa.",
+          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio' sopra."
         }
       },
       "persons": {
-        "title": "Abbinamento Persona → Servizio Notify",
-        "description": "Per ogni persona tracciata in Home Assistant, seleziona quale o quali servizi notify usare. Il **primo servizio** della lista è il dispositivo principale; gli altri sono usati come extra o fallback a seconda della tua app di notifica.\n\nLascia una persona senza servizi per escluderla da Smart Presence Notify.",
+        "title": "Chi notificare — Abbinamento ai servizi",
+        "description": "Per ogni persona tracciata in Home Assistant, scegli quale servizio notify usare. Il **primo servizio** della lista è quello principale.\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
         "data": {
           "admin_person": "Persona admin"
         },
         "data_description": {
-          "admin_person": "La persona che riceve le notifiche quando è attiva la modalità **Solo l'admin**. Se questa persona non è a casa, riceverà la notifica il primo che rientra."
+          "admin_person": "Il membro della famiglia che riceve le notifiche quando è attiva la modalità 'Solo la persona admin'. Se è fuori casa, la riceverà il primo che rientra."
         }
       }
     },
     "error": {
       "invalid_timeout": "Il timeout deve essere 0 (disabilitato) oppure un numero positivo di minuti.",
-      "fallback_service_required": "Devi specificare un servizio notify di fallback quando selezioni \"Invia al servizio di fallback\".",
+      "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
-      "admin_required": "Devi selezionare esattamente una persona admin quando è attiva la modalità \"Solo l'admin\"."
+      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'."
     },
     "abort": {
       "already_configured": "Smart Presence Notify è già configurato. Usa il pulsante Configura per modificare le impostazioni."
@@ -46,40 +46,40 @@
     "step": {
       "user": {
         "title": "Smart Presence Notify — Impostazioni generali",
-        "description": "Aggiorna come vengono recapitate le notifiche in base a chi è a casa, e cosa succede quando non c'è nessuno.",
+        "description": "Smart Presence Notify invia notifiche solo quando qualcuno è a casa. Se la casa è vuota, i messaggi in arrivo vengono messi in attesa e recapitati al rientro di qualcuno. Aggiorna chi riceve le notifiche e come vengono gestiti i messaggi in attesa.",
         "data": {
           "name": "Nome visualizzato",
           "target_mode": "Chi riceve le notifiche quando qualcuno è a casa?",
-          "queue_mode": "Cosa recapitare quando qualcuno torna a casa?",
-          "queue_timeout_minutes": "Scarta le notifiche in coda dopo (minuti)",
-          "fallback_mode": "Cosa fare quando una notifica in coda scade?",
-          "fallback_service": "Servizio notify di fallback"
+          "queue_mode": "Quando qualcuno rientra, quali messaggi in attesa inviare?",
+          "queue_timeout_minutes": "Tieni i messaggi in attesa per (minuti, 0 = illimitato)",
+          "fallback_mode": "Cosa fare con i messaggi scaduti?",
+          "fallback_service": "Inoltra i messaggi scaduti a questo servizio"
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
-          "target_mode": "**Tutti i presenti** — la notifica viene inviata a tutti i membri della famiglia attualmente a casa.\n**Solo l'admin** — la riceve solo la persona designata come admin; se è assente, la riceve il primo che rientra.\n**Decido io** — specifichi i destinatari ad ogni chiamata al servizio tramite il campo `targets`.",
-          "queue_mode": "Si applica quando qualcuno rientra a casa e ci sono notifiche in attesa.\n**Tutte in ordine** — ogni notifica in coda viene recapitata una per una, dalla più vecchia alla più recente.\n**Solo l'ultima** — viene recapitata solo la notifica più recente; le altre vengono scartate.\n**Riepilogo** — un unico messaggio che elenca i titoli di tutte le notifiche in coda.",
-          "queue_timeout_minutes": "Le notifiche in coda da più tempo di questo valore vengono gestite automaticamente secondo l'azione di scadenza qui sotto. Imposta **0** per non far mai scadere le notifiche.",
-          "fallback_mode": "**Scarta** — le notifiche scadute vengono eliminate silenziosamente.\n**Invia al servizio di fallback** — le notifiche scadute vengono inoltrate al servizio specificato sotto (es. un bot Telegram o email).",
-          "fallback_service": "Il servizio notify da usare quando una notifica scade (es. `notify.telegram`). Richiesto solo se hai selezionato \"Invia al servizio di fallback\" sopra."
+          "target_mode": "Scegli chi riceve ogni notifica mentre qualcuno è a casa:\n- **Tutti i presenti** — tutti i membri della famiglia attualmente a casa.\n- **Solo la persona admin** — solo l'admin designato; se è fuori, lo riceve il primo che rientra.\n- **Specificato nella chiamata** — la tua automazione o script decide il destinatario di volta in volta.",
+          "queue_mode": "Si applica solo quando la casa era vuota e ci sono messaggi in attesa:\n- **Tutti i messaggi, dal più vecchio** — ogni messaggio in attesa viene recapitato nell'ordine di arrivo.\n- **Solo il più recente** — viene inviato solo l'ultimo messaggio; i precedenti vengono scartati.\n- **Riepilogo** — un unico messaggio che elenca i titoli di tutti i messaggi in attesa.",
+          "queue_timeout_minutes": "Dopo questi minuti, i messaggi in attesa vengono considerati scaduti e gestiti dalla regola qui sotto. Imposta **0** per tenerli in attesa indefinitamente fino al rientro di qualcuno.",
+          "fallback_mode": "Cosa succede quando un messaggio in attesa scade:\n- **Scarta silenziosamente** — il messaggio viene eliminato senza alcuna notifica.\n- **Inoltra a un altro servizio** — il messaggio viene inviato al servizio indicato sotto (es. bot Telegram o email), anche se nessuno è a casa.",
+          "fallback_service": "Il servizio notify che riceve i messaggi scaduti (es. `notify.telegram`). Richiesto solo se hai selezionato 'Inoltra a un altro servizio' sopra."
         }
       },
       "persons": {
-        "title": "Abbinamento Persona → Servizio Notify",
-        "description": "Per ogni persona tracciata in Home Assistant, seleziona quale o quali servizi notify usare. Il **primo servizio** della lista è il dispositivo principale; gli altri sono usati come extra o fallback a seconda della tua app di notifica.\n\nLascia una persona senza servizi per escluderla da Smart Presence Notify.",
+        "title": "Chi notificare — Abbinamento ai servizi",
+        "description": "Per ogni persona tracciata in Home Assistant, scegli quale servizio notify usare. Il **primo servizio** della lista è quello principale.\n\nLascia una persona senza servizio per escluderla da Smart Presence Notify.",
         "data": {
           "admin_person": "Persona admin"
         },
         "data_description": {
-          "admin_person": "La persona che riceve le notifiche quando è attiva la modalità **Solo l'admin**. Se questa persona non è a casa, riceverà la notifica il primo che rientra."
+          "admin_person": "Il membro della famiglia che riceve le notifiche quando è attiva la modalità 'Solo la persona admin'. Se è fuori casa, la riceverà il primo che rientra."
         }
       }
     },
     "error": {
       "invalid_timeout": "Il timeout deve essere 0 (disabilitato) oppure un numero positivo di minuti.",
-      "fallback_service_required": "Devi specificare un servizio notify di fallback quando selezioni \"Invia al servizio di fallback\".",
+      "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
-      "admin_required": "Devi selezionare esattamente una persona admin quando è attiva la modalità \"Solo l'admin\"."
+      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'."
     }
   }
 }
