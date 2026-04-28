@@ -266,3 +266,86 @@ async def test_drain_summary_on_arrival(hass):
     assert "2 messages" in calls[0].data["message"]
     assert "Door" in calls[0].data["message"]
     assert "Window" in calls[0].data["message"]
+
+
+async def test_notification_expires_discard(hass):
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "fifo",
+            "queue_timeout_minutes": 60,
+            "fallback_mode": "discard",
+            "fallback_service": "",
+            "persons": {
+                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
+            },
+        },
+    )
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Temp", "Body")
+    assert len(coord.data.queue) == 1
+    notif = coord.data.queue[0]
+
+    # Directly trigger expiry (bypasses time-based scheduling)
+    await coord._async_expire_notification(notif)
+
+    assert coord.data.queue == []
+
+
+async def test_notification_expires_with_fallback(hass):
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "fifo",
+            "queue_timeout_minutes": 60,
+            "fallback_mode": "notify_fallback",
+            "fallback_service": "notify.telegram",
+            "persons": {
+                "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True}
+            },
+        },
+    )
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Alert", "Body")
+    notif = coord.data.queue[0]
+
+    calls = async_mock_service(hass, "notify", "telegram")
+    await coord._async_expire_notification(notif)
+
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Alert"
+    assert calls[0].data["message"] == "Body"
+    assert coord.data.queue == []
+
+
+async def test_queue_persists_across_reinit(hass, mock_config_entry):
+    hass.states.async_set("person.mario", "not_home")
+    hass.states.async_set("person.lucia", "not_home")
+    mock_config_entry.add_to_hass(hass)
+
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Persist", "Me")
+    assert len(coord.data.queue) == 1
+
+    # Simulate restart by creating a new coordinator with same hass/entry
+    coord2 = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord2.async_initialize()
+
+    assert len(coord2.data.queue) == 1
+    assert coord2.data.queue[0].title == "Persist"
