@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -16,7 +17,9 @@ class SNPStore:
     """Wraps HA Store for PendingNotification queue."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        self._store: Store = Store(hass, STORE_VERSION, STORE_KEY)
+        self._store: Store[list[dict[str, Any]]] = Store(
+            hass, STORE_VERSION, STORE_KEY
+        )
 
     async def async_load(self) -> list[PendingNotification]:
         data = await self._store.async_load()

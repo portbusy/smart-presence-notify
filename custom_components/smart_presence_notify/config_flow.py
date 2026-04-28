@@ -1,9 +1,11 @@
 """Config flow for Smart Presence Notify."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -23,9 +25,9 @@ from .const import (
 )
 
 
-def _build_global_schema(defaults: dict | None = None) -> vol.Schema:
+def _build_global_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     """Build global settings schema with optional defaults."""
-    d = defaults or {}
+    d: dict[str, Any] = dict(defaults) if defaults else {}
     return vol.Schema(
         {
             vol.Required("name", default=d.get("name", "Smart Presence Notify")): str,
@@ -48,7 +50,7 @@ def _build_global_schema(defaults: dict | None = None) -> vol.Schema:
     )
 
 
-def _validate_global_settings(user_input: dict) -> dict[str, str]:
+def _validate_global_settings(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate global settings form input. Returns errors dict."""
     errors: dict[str, str] = {}
     timeout = user_input.get(CONF_QUEUE_TIMEOUT, 0)
@@ -62,7 +64,9 @@ def _validate_global_settings(user_input: dict) -> dict[str, str]:
     return errors
 
 
-def _validate_persons(persons: dict, target_mode: str | None) -> dict[str, str]:
+def _validate_persons(
+    persons: dict[str, Any], target_mode: str | None
+) -> dict[str, str]:
     """Validate persons form input. Returns errors dict."""
     errors: dict[str, str] = {}
     if not persons:
@@ -78,10 +82,10 @@ class SNPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for Smart Presence Notify."""
 
     VERSION = 1
-    _global_data: dict
+    _global_data: dict[str, Any]
 
     async def async_step_user(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         errors: dict[str, str] = {}
 
@@ -100,7 +104,7 @@ class SNPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_persons(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         errors: dict[str, str] = {}
         person_entities = list(self.hass.states.async_entity_ids("person"))
@@ -141,15 +145,15 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow (same as config flow)."""
 
     def __init__(self) -> None:
-        self._global_data: dict = {}
+        self._global_data: dict[str, Any] = {}
 
     async def async_step_init(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         return await self.async_step_user(user_input)
 
     async def async_step_user(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         errors: dict[str, str] = {}
 
@@ -168,7 +172,7 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_persons(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
         errors: dict[str, str] = {}
         person_entities = list(self.hass.states.async_entity_ids("person"))
@@ -206,11 +210,11 @@ def _build_persons_schema(
     person_entities: list[str],
     notify_service_options: list[str],
     target_mode: str | None,
-    defaults: dict | None = None,
+    defaults: dict[str, Any] | None = None,
 ) -> vol.Schema:
     """Build a dynamic schema with one row per person entity."""
     defaults = defaults or {}
-    schema: dict = {}
+    schema: dict[Any, Any] = {}
 
     for entity_id in person_entities:
         key = f"{entity_id}__services"
@@ -246,10 +250,12 @@ def _build_persons_schema(
     return vol.Schema(schema)
 
 
-def _parse_persons_input(user_input: dict, person_entities: list[str]) -> dict:
+def _parse_persons_input(
+    user_input: dict[str, Any], person_entities: list[str]
+) -> dict[str, dict[str, Any]]:
     """Convert flat form data into nested persons dict."""
     admin_person = user_input.get(CONF_ADMIN_PERSON)
-    persons: dict = {}
+    persons: dict[str, dict[str, Any]] = {}
     for entity_id in person_entities:
         key = f"{entity_id}__services"
         services = user_input.get(key, [])

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .coordinator import SmartPresenceNotifyCoordinator
@@ -17,9 +17,9 @@ class PendingNotification:
     priority: Literal["normal", "high"]
     created_at: datetime
     expires_at: datetime | None
-    extra_data: dict
+    extra_data: dict[str, Any]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "title": self.title,
@@ -31,7 +31,7 @@ class PendingNotification:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> PendingNotification:
+    def from_dict(cls, data: dict[str, Any]) -> PendingNotification:
         return cls(
             id=data["id"],
             title=data["title"],
