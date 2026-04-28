@@ -1,6 +1,8 @@
 """Binary sensor entities for Smart Presence Notify."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -53,7 +55,7 @@ class SNPSomeoneHomeSensor(
         return self.coordinator.data.someone_home
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         if self.coordinator.data is None:
             return {}
         return {"home_persons": self.coordinator.data.home_persons}

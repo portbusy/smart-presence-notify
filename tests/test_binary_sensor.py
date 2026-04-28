@@ -33,6 +33,7 @@ async def test_someone_home_on_when_person_home(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.smart_presence_notify_someone_home")
+    assert state is not None
     assert state.state == "on"
     assert "person.mario" in state.attributes["home_persons"]
 
@@ -52,4 +53,5 @@ async def test_someone_home_updates_on_arrival(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.smart_presence_notify_someone_home")
+    assert state is not None
     assert state.state == "on"
