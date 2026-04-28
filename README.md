@@ -2,6 +2,10 @@
 
 Home Assistant custom integration that routes notifications based on who is home.
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![GitHub release](https://img.shields.io/github/v/release/portbusy/smart-presence-notify)](https://github.com/portbusy/smart-presence-notify/releases)
+[![Tests](https://github.com/portbusy/smart-presence-notify/actions/workflows/tests.yml/badge.svg)](https://github.com/portbusy/smart-presence-notify/actions/workflows/tests.yml)
+
 ## Features
 
 - Sends notifications to all present household members (or a single admin, or caller-defined target)
@@ -16,6 +20,10 @@ Home Assistant custom integration that routes notifications based on who is home
 
 ### HACS (recommended)
 
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=portbusy&repository=smart-presence-notify&category=integration)
+
+Or manually via HACS:
+
 1. Open HACS in Home Assistant
 2. Go to **Integrations** → **Custom repositories**
 3. Add `https://github.com/portbusy/smart-presence-notify` with category `Integration`
@@ -28,7 +36,9 @@ Copy `custom_components/smart_presence_notify/` into your HA `custom_components/
 
 ## Setup
 
-Go to **Settings → Devices & Services → Add Integration** and search for "Smart Presence Notify".
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=smart_presence_notify)
+
+Or go to **Settings → Devices & Services → Add Integration** and search for "Smart Presence Notify".
 
 ## Usage
 
