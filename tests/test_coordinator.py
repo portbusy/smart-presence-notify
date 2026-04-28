@@ -1,8 +1,7 @@
 """Tests for SmartPresenceNotifyCoordinator."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -172,6 +171,10 @@ async def test_high_priority_nobody_home_uses_fallback(hass):
     assert len(calls) == 1
     assert calls[0].data["title"] == "Alert"
     assert calls[0].data["message"] == "Fire!"
+    # High priority + fallback must NOT enqueue
+    assert coord.data.queue == []
+    assert coord.data.last_sent is not None
+    assert coord.data.last_sent.recipients == ["notify.telegram"]
 
 
 async def test_drain_fifo_on_arrival(hass, mock_config_entry):
@@ -231,6 +234,10 @@ async def test_drain_last_only_on_arrival(hass):
 
     assert len(calls) == 1
     assert calls[0].data["title"] == "Last"
+    assert calls[0].data["message"] == "B2"
+    assert coord.data.queue == []
+    assert coord.data.last_sent is not None
+    assert coord.data.last_sent.title == "Last"
 
 
 async def test_drain_summary_on_arrival(hass):
@@ -266,6 +273,10 @@ async def test_drain_summary_on_arrival(hass):
     assert "2 messages" in calls[0].data["message"]
     assert "Door" in calls[0].data["message"]
     assert "Window" in calls[0].data["message"]
+    assert calls[0].data["title"] == "Missed notifications"
+    assert coord.data.queue == []
+    assert coord.data.last_sent is not None
+    assert coord.data.last_sent.title == "Missed notifications"
 
 
 async def test_notification_expires_discard(hass):
@@ -292,11 +303,14 @@ async def test_notification_expires_discard(hass):
     await coord.async_send_notification("Temp", "Body")
     assert len(coord.data.queue) == 1
     notif = coord.data.queue[0]
+    assert notif.expires_at is not None
 
     # Directly trigger expiry (bypasses time-based scheduling)
     await coord._async_expire_notification(notif)
 
     assert coord.data.queue == []
+    # Discard mode must NOT record a last_sent
+    assert coord.data.last_sent is None
 
 
 async def test_notification_expires_with_fallback(hass):
@@ -330,6 +344,46 @@ async def test_notification_expires_with_fallback(hass):
     assert calls[0].data["title"] == "Alert"
     assert calls[0].data["message"] == "Body"
     assert coord.data.queue == []
+
+
+async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):
+    """Queue must not be drained when arrived person has no notify_services."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "fifo",
+            "queue_timeout_minutes": 0,
+            "fallback_mode": "discard",
+            "fallback_service": "",
+            "persons": {
+                # Mario has notify services, Guest is configured but has none
+                "person.mario": {
+                    "notify_services": ["notify.mobile_app_mario"],
+                    "is_admin": True,
+                },
+                "person.guest": {"notify_services": [], "is_admin": False},
+            },
+        },
+    )
+    hass.states.async_set("person.mario", "not_home")
+    hass.states.async_set("person.guest", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Door", "Open")
+    assert len(coord.data.queue) == 1
+
+    # Guest arrives — must NOT drain (no notify services)
+    mario_calls = async_mock_service(hass, "notify", "mobile_app_mario")
+    hass.states.async_set("person.guest", "home")
+    await hass.async_block_till_done()
+
+    assert len(mario_calls) == 0
+    assert len(coord.data.queue) == 1
 
 
 async def test_queue_persists_across_reinit(hass, mock_config_entry):

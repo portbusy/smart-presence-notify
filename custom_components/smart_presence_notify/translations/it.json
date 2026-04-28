@@ -5,7 +5,7 @@
         "title": "Smart Presence Notify — Impostazioni generali",
         "description": "Configura come vengono recapitate le notifiche in base a chi è a casa, e cosa succede quando non c'è nessuno.",
         "data": {
-          "name": "Nome dell'integrazione",
+          "name": "Nome visualizzato",
           "target_mode": "Chi riceve le notifiche quando qualcuno è a casa?",
           "queue_mode": "Cosa recapitare quando qualcuno torna a casa?",
           "queue_timeout_minutes": "Scarta le notifiche in coda dopo (minuti)",
@@ -13,7 +13,7 @@
           "fallback_service": "Servizio notify di fallback"
         },
         "data_description": {
-          "name": "Un nome per identificare questa istanza dell'integrazione.",
+          "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
           "target_mode": "**Tutti i presenti** — la notifica viene inviata a tutti i membri della famiglia attualmente a casa.\n**Solo l'admin** — la riceve solo la persona designata come admin; se è assente, la riceve il primo che rientra.\n**Decido io** — specifichi i destinatari ad ogni chiamata al servizio tramite il campo `targets`.",
           "queue_mode": "Si applica quando qualcuno rientra a casa e ci sono notifiche in attesa.\n**Tutte in ordine** — ogni notifica in coda viene recapitata una per una, dalla più vecchia alla più recente.\n**Solo l'ultima** — viene recapitata solo la notifica più recente; le altre vengono scartate.\n**Riepilogo** — un unico messaggio che elenca i titoli di tutte le notifiche in coda.",
           "queue_timeout_minutes": "Le notifiche in coda da più tempo di questo valore vengono gestite automaticamente secondo l'azione di scadenza qui sotto. Imposta **0** per non far mai scadere le notifiche.",
@@ -48,7 +48,7 @@
         "title": "Smart Presence Notify — Impostazioni generali",
         "description": "Aggiorna come vengono recapitate le notifiche in base a chi è a casa, e cosa succede quando non c'è nessuno.",
         "data": {
-          "name": "Nome dell'integrazione",
+          "name": "Nome visualizzato",
           "target_mode": "Chi riceve le notifiche quando qualcuno è a casa?",
           "queue_mode": "Cosa recapitare quando qualcuno torna a casa?",
           "queue_timeout_minutes": "Scarta le notifiche in coda dopo (minuti)",
@@ -56,7 +56,7 @@
           "fallback_service": "Servizio notify di fallback"
         },
         "data_description": {
-          "name": "Un nome per identificare questa istanza dell'integrazione.",
+          "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
           "target_mode": "**Tutti i presenti** — la notifica viene inviata a tutti i membri della famiglia attualmente a casa.\n**Solo l'admin** — la riceve solo la persona designata come admin; se è assente, la riceve il primo che rientra.\n**Decido io** — specifichi i destinatari ad ogni chiamata al servizio tramite il campo `targets`.",
           "queue_mode": "Si applica quando qualcuno rientra a casa e ci sono notifiche in attesa.\n**Tutte in ordine** — ogni notifica in coda viene recapitata una per una, dalla più vecchia alla più recente.\n**Solo l'ultima** — viene recapitata solo la notifica più recente; le altre vengono scartate.\n**Riepilogo** — un unico messaggio che elenca i titoli di tutte le notifiche in coda.",
           "queue_timeout_minutes": "Le notifiche in coda da più tempo di questo valore vengono gestite automaticamente secondo l'azione di scadenza qui sotto. Imposta **0** per non far mai scadere le notifiche.",

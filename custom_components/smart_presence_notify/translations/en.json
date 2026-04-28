@@ -5,7 +5,7 @@
         "title": "Smart Presence Notify — General Settings",
         "description": "Configure how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration name",
+          "name": "Display name",
           "target_mode": "Who receives notifications when someone is home?",
           "queue_mode": "What to deliver when someone returns home?",
           "queue_timeout_minutes": "Discard queued notifications after (minutes)",
@@ -13,7 +13,7 @@
           "fallback_service": "Fallback notify service"
         },
         "data_description": {
-          "name": "A name to identify this integration instance.",
+          "name": "The name shown in Home Assistant's Devices & Services page.",
           "target_mode": "**Everyone home** — notification goes to all household members currently at home.\n**Admin only** — only the designated admin receives it; if the admin is away, the first person home gets it.\n**Caller decides** — you specify the recipients in each service call via the `targets` field.",
           "queue_mode": "Applies when someone arrives home and there are queued notifications.\n**All in order** — every queued notification is delivered one by one, oldest first.\n**Last only** — only the most recent notification is delivered; older ones are discarded.\n**Summary** — a single message listing all queued notification titles.",
           "queue_timeout_minutes": "Queued notifications older than this are automatically handled according to the expiry action below. Set to **0** to never expire.",
@@ -48,7 +48,7 @@
         "title": "Smart Presence Notify — General Settings",
         "description": "Update how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration name",
+          "name": "Display name",
           "target_mode": "Who receives notifications when someone is home?",
           "queue_mode": "What to deliver when someone returns home?",
           "queue_timeout_minutes": "Discard queued notifications after (minutes)",
@@ -56,7 +56,7 @@
           "fallback_service": "Fallback notify service"
         },
         "data_description": {
-          "name": "A name to identify this integration instance.",
+          "name": "The name shown in Home Assistant's Devices & Services page.",
           "target_mode": "**Everyone home** — notification goes to all household members currently at home.\n**Admin only** — only the designated admin receives it; if the admin is away, the first person home gets it.\n**Caller decides** — you specify the recipients in each service call via the `targets` field.",
           "queue_mode": "Applies when someone arrives home and there are queued notifications.\n**All in order** — every queued notification is delivered one by one, oldest first.\n**Last only** — only the most recent notification is delivered; older ones are discarded.\n**Summary** — a single message listing all queued notification titles.",
           "queue_timeout_minutes": "Queued notifications older than this are automatically handled according to the expiry action below. Set to **0** to never expire.",

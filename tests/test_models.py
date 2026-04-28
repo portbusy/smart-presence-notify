@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from custom_components.smart_presence_notify.models import (
-    CoordinatorData,
-    NotificationRecord,
-    PendingNotification,
-)
+from custom_components.smart_presence_notify.models import PendingNotification
 
 
 def test_pending_notification_roundtrip():

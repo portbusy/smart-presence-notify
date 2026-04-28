@@ -1,7 +1,6 @@
 """Tests for integration setup and teardown."""
 from __future__ import annotations
 
-import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 

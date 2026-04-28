@@ -1,11 +1,8 @@
 """Tests for binary sensor entities."""
 from __future__ import annotations
 
-import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.smart_presence_notify.const import DOMAIN
 
 
 async def test_someone_home_off_when_all_away(
