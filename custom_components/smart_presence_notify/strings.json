@@ -2,59 +2,84 @@
   "config": {
     "step": {
       "user": {
-        "title": "Global Settings",
+        "title": "Smart Presence Notify — General Settings",
+        "description": "Configure how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration Name",
-          "target_mode": "Target Mode",
-          "queue_mode": "Queue Mode",
-          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
-          "fallback_mode": "Timeout Fallback",
-          "fallback_service": "Fallback Notify Service"
+          "name": "Integration name",
+          "target_mode": "Who receives notifications when someone is home?",
+          "queue_mode": "What to deliver when someone returns home?",
+          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
+          "fallback_mode": "What to do when a queued notification expires?",
+          "fallback_service": "Fallback notify service"
+        },
+        "data_description": {
+          "name": "A name to identify this integration instance.",
+          "target_mode": "Everyone home / Admin only / Caller decides",
+          "queue_mode": "All in order / Last only / Summary",
+          "queue_timeout_minutes": "Set to 0 to never expire queued notifications.",
+          "fallback_mode": "Discard / Send to fallback service",
+          "fallback_service": "Required only when 'Send to fallback service' is selected. Example: notify.telegram"
         }
       },
       "persons": {
-        "title": "Person — Notify Mapping",
-        "description": "Select one or more notify services for each person. The first service is the primary device.",
+        "title": "Person → Notify Service Mapping",
+        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The first service is the primary device. Leave a person empty to exclude them.",
         "data": {
-          "admin_person": "Admin Person (receives notifications when target mode is single admin)"
+          "admin_person": "Admin person"
+        },
+        "data_description": {
+          "admin_person": "Required only in Admin only mode. If admin is away, the first person home receives the notification."
         }
       }
     },
     "error": {
-      "invalid_timeout": "Timeout must be 0 or greater",
-      "fallback_service_required": "Fallback service is required when fallback mode is notify_fallback",
-      "no_persons": "At least one person with a notify service must be configured",
-      "admin_required": "Exactly one admin must be selected in single_admin mode"
+      "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
+      "fallback_service_required": "You must specify a fallback notify service when 'Send to fallback service' is selected.",
+      "no_persons": "At least one person must have a notify service assigned.",
+      "admin_required": "You must select exactly one admin when 'Admin only' mode is active."
     },
     "abort": {
-      "already_configured": "Integration is already configured"
+      "already_configured": "Smart Presence Notify is already set up. Use the Configure button to change settings."
     }
   },
   "options": {
     "step": {
       "user": {
-        "title": "Update Global Settings",
+        "title": "Smart Presence Notify — General Settings",
+        "description": "Update how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration Name",
-          "target_mode": "Target Mode",
-          "queue_mode": "Queue Mode",
-          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
-          "fallback_mode": "Timeout Fallback",
-          "fallback_service": "Fallback Notify Service"
+          "name": "Integration name",
+          "target_mode": "Who receives notifications when someone is home?",
+          "queue_mode": "What to deliver when someone returns home?",
+          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
+          "fallback_mode": "What to do when a queued notification expires?",
+          "fallback_service": "Fallback notify service"
+        },
+        "data_description": {
+          "name": "A name to identify this integration instance.",
+          "target_mode": "Everyone home / Admin only / Caller decides",
+          "queue_mode": "All in order / Last only / Summary",
+          "queue_timeout_minutes": "Set to 0 to never expire queued notifications.",
+          "fallback_mode": "Discard / Send to fallback service",
+          "fallback_service": "Required only when 'Send to fallback service' is selected. Example: notify.telegram"
         }
       },
       "persons": {
-        "title": "Update Person — Notify Mapping",
+        "title": "Person → Notify Service Mapping",
+        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The first service is the primary device. Leave a person empty to exclude them.",
         "data": {
-          "admin_person": "Admin Person"
+          "admin_person": "Admin person"
+        },
+        "data_description": {
+          "admin_person": "Required only in Admin only mode. If admin is away, the first person home receives the notification."
         }
       }
     },
     "error": {
-      "invalid_timeout": "Timeout must be 0 or greater",
-      "fallback_service_required": "Fallback service is required when fallback mode is notify_fallback",
-      "no_persons": "At least one person with a notify service must be configured",
-      "admin_required": "Exactly one admin must be selected in single_admin mode"
+      "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
+      "fallback_service_required": "You must specify a fallback notify service when 'Send to fallback service' is selected.",
+      "no_persons": "At least one person must have a notify service assigned.",
+      "admin_required": "You must select exactly one admin when 'Admin only' mode is active."
     }
   }
 }

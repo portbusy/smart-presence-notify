@@ -2,65 +2,84 @@
   "config": {
     "step": {
       "user": {
-        "title": "Global Settings",
+        "title": "Smart Presence Notify — General Settings",
+        "description": "Configure how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration Name",
-          "target_mode": "Target Mode",
-          "queue_mode": "Queue Mode",
-          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
-          "fallback_mode": "Timeout Fallback",
-          "fallback_service": "Fallback Notify Service"
+          "name": "Integration name",
+          "target_mode": "Who receives notifications when someone is home?",
+          "queue_mode": "What to deliver when someone returns home?",
+          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
+          "fallback_mode": "What to do when a queued notification expires?",
+          "fallback_service": "Fallback notify service"
         },
         "data_description": {
-          "fallback_service": "Required only when Timeout Fallback is set to notify_fallback. Example: notify.telegram"
+          "name": "A name to identify this integration instance.",
+          "target_mode": "**Everyone home** — notification goes to all household members currently at home.\n**Admin only** — only the designated admin receives it; if the admin is away, the first person home gets it.\n**Caller decides** — you specify the recipients in each service call via the `targets` field.",
+          "queue_mode": "Applies when someone arrives home and there are queued notifications.\n**All in order** — every queued notification is delivered one by one, oldest first.\n**Last only** — only the most recent notification is delivered; older ones are discarded.\n**Summary** — a single message listing all queued notification titles.",
+          "queue_timeout_minutes": "Queued notifications older than this are automatically handled according to the expiry action below. Set to **0** to never expire.",
+          "fallback_mode": "**Discard** — expired notifications are silently deleted.\n**Send to fallback service** — expired notifications are forwarded to the service specified below (e.g. a Telegram bot or email).",
+          "fallback_service": "The notify service to use when a notification expires (e.g. `notify.telegram`). Required only when \"Send to fallback service\" is selected above."
         }
       },
       "persons": {
-        "title": "Person — Notify Mapping",
-        "description": "Select one or more notify services for each person. The first selected service is the primary device.",
+        "title": "Person → Notify Service Mapping",
+        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The **first service** in the list is the primary device; additional ones are used as fallbacks or extras depending on your notification app.\n\nLeave a person empty to exclude them from Smart Presence Notify.",
         "data": {
-          "admin_person": "Admin Person"
+          "admin_person": "Admin person"
         },
         "data_description": {
-          "admin_person": "Required only in single_admin mode. This person receives all notifications when home."
+          "admin_person": "The person who receives notifications when **Admin only** mode is active. If this person is not home, the first person who arrives home will receive the notification instead."
         }
       }
     },
     "error": {
-      "invalid_timeout": "Timeout must be 0 or greater.",
-      "fallback_service_required": "A fallback service is required when Timeout Fallback is set to notify_fallback.",
-      "no_persons": "At least one person with a notify service must be configured.",
-      "admin_required": "Exactly one admin must be selected when Target Mode is single_admin."
+      "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
+      "fallback_service_required": "You must specify a fallback notify service when \"Send to fallback service\" is selected.",
+      "no_persons": "At least one person must have a notify service assigned.",
+      "admin_required": "You must select exactly one admin when \"Admin only\" mode is active."
     },
     "abort": {
-      "already_configured": "Smart Presence Notify is already configured."
+      "already_configured": "Smart Presence Notify is already set up. Use the Configure button to change settings."
     }
   },
   "options": {
     "step": {
       "user": {
-        "title": "Update Global Settings",
+        "title": "Smart Presence Notify — General Settings",
+        "description": "Update how notifications are delivered based on who is home, and what happens when nobody is home.",
         "data": {
-          "name": "Integration Name",
-          "target_mode": "Target Mode",
-          "queue_mode": "Queue Mode",
-          "queue_timeout_minutes": "Queue Timeout (minutes, 0 = disabled)",
-          "fallback_mode": "Timeout Fallback",
-          "fallback_service": "Fallback Notify Service"
+          "name": "Integration name",
+          "target_mode": "Who receives notifications when someone is home?",
+          "queue_mode": "What to deliver when someone returns home?",
+          "queue_timeout_minutes": "Discard queued notifications after (minutes)",
+          "fallback_mode": "What to do when a queued notification expires?",
+          "fallback_service": "Fallback notify service"
+        },
+        "data_description": {
+          "name": "A name to identify this integration instance.",
+          "target_mode": "**Everyone home** — notification goes to all household members currently at home.\n**Admin only** — only the designated admin receives it; if the admin is away, the first person home gets it.\n**Caller decides** — you specify the recipients in each service call via the `targets` field.",
+          "queue_mode": "Applies when someone arrives home and there are queued notifications.\n**All in order** — every queued notification is delivered one by one, oldest first.\n**Last only** — only the most recent notification is delivered; older ones are discarded.\n**Summary** — a single message listing all queued notification titles.",
+          "queue_timeout_minutes": "Queued notifications older than this are automatically handled according to the expiry action below. Set to **0** to never expire.",
+          "fallback_mode": "**Discard** — expired notifications are silently deleted.\n**Send to fallback service** — expired notifications are forwarded to the service specified below (e.g. a Telegram bot or email).",
+          "fallback_service": "The notify service to use when a notification expires (e.g. `notify.telegram`). Required only when \"Send to fallback service\" is selected above."
         }
       },
       "persons": {
-        "title": "Update Person — Notify Mapping",
+        "title": "Person → Notify Service Mapping",
+        "description": "For each person tracked in Home Assistant, select which notify service(s) to use. The **first service** in the list is the primary device; additional ones are used as fallbacks or extras depending on your notification app.\n\nLeave a person empty to exclude them from Smart Presence Notify.",
         "data": {
-          "admin_person": "Admin Person"
+          "admin_person": "Admin person"
+        },
+        "data_description": {
+          "admin_person": "The person who receives notifications when **Admin only** mode is active. If this person is not home, the first person who arrives home will receive the notification instead."
         }
       }
     },
     "error": {
-      "invalid_timeout": "Timeout must be 0 or greater.",
-      "fallback_service_required": "A fallback service is required when Timeout Fallback is set to notify_fallback.",
-      "no_persons": "At least one person with a notify service must be configured.",
-      "admin_required": "Exactly one admin must be selected when Target Mode is single_admin."
+      "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
+      "fallback_service_required": "You must specify a fallback notify service when \"Send to fallback service\" is selected.",
+      "no_persons": "At least one person must have a notify service assigned.",
+      "admin_required": "You must select exactly one admin when \"Admin only\" mode is active."
     }
   }
 }
