@@ -6,6 +6,7 @@ import logging
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -37,11 +38,11 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Manages presence-aware notification routing."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        super().__init__(hass, _LOGGER, name=DOMAIN)
+        super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self._entry = entry
         self._store = SNPStore(hass)
-        self._timeout_unsubs: dict[str, Callable] = {}
-        self._presence_unsub: Callable | None = None
+        self._timeout_unsubs: dict[str, Callable[[], None]] = {}
+        self._presence_unsub: Callable[[], None] | None = None
 
     async def async_initialize(self) -> None:
         """Load queue from storage and start presence listener."""
@@ -123,17 +124,17 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         return persons.get(person_entity_id, {}).get(CONF_NOTIFY_SERVICES, [])
 
     async def _async_call_service(
-        self, service_full: str, title: str, message: str, extra: dict
+        self, service_full: str, title: str, message: str, extra: dict[str, Any]
     ) -> None:
         """Call a notify.* service."""
         domain, service = service_full.split(".", 1)
-        data = {"title": title, "message": message}
+        data: dict[str, Any] = {"title": title, "message": message}
         if extra:
             data.update(extra)
         await self.hass.services.async_call(domain, service, data)
 
     async def _async_notify_person(
-        self, person_entity_id: str, title: str, message: str, extra: dict
+        self, person_entity_id: str, title: str, message: str, extra: dict[str, Any]
     ) -> list[str]:
         """Notify all devices for a person. Returns list of services called."""
         services = self._get_notify_services_for_person(person_entity_id)
@@ -174,10 +175,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         priority: str = Priority.NORMAL,
         target_override: str | None = None,
         targets: list[str] | None = None,
-        extra_data: dict | None = None,
+        extra_data: dict[str, Any] | None = None,
     ) -> None:
         """Route a notification based on presence and configuration."""
-        extra = extra_data or {}
+        extra: dict[str, Any] = extra_data or {}
 
         if target_override:
             await self._async_call_service(target_override, title, message, extra)
@@ -224,7 +225,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         await self._enqueue(title, message, priority, extra)
 
     async def _enqueue(
-        self, title: str, message: str, priority: str, extra: dict
+        self, title: str, message: str, priority: str, extra: dict[str, Any]
     ) -> None:
         timeout_minutes = self._entry.data.get(CONF_QUEUE_TIMEOUT, 0)
         now = datetime.now(timezone.utc)
@@ -265,6 +266,15 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         queue_mode = self._entry.data.get(CONF_QUEUE_MODE, QueueMode.FIFO)
         recipients = self._get_notify_services_for_person(arrived_person)
+        if not recipients:
+            # The arrived person has no notify services configured: leave the
+            # queue intact so it can be delivered when another configured
+            # person arrives.
+            _LOGGER.debug(
+                "Skipping queue drain: %s has no notify_services configured",
+                arrived_person,
+            )
+            return
 
         if queue_mode == QueueMode.SUMMARY:
             titles = ", ".join(n.title for n in queue)
