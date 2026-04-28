@@ -1,0 +1,44 @@
+send:
+  name: Send Notification
+  description: Send a presence-aware notification. Delivered to home members or queued for the first person who returns.
+  fields:
+    title:
+      name: Title
+      description: Notification title.
+      required: true
+      selector:
+        text:
+    message:
+      name: Message
+      description: Notification body.
+      required: true
+      selector:
+        text:
+    priority:
+      name: Priority
+      description: High priority bypasses the queue and controls device sound/interruption.
+      required: false
+      default: normal
+      selector:
+        select:
+          options:
+            - normal
+            - high
+    target_override:
+      name: Target Override
+      description: Send directly to this notify service, bypassing all presence logic. E.g. notify.telegram.
+      required: false
+      selector:
+        text:
+    targets:
+      name: Targets
+      description: List of notify services to use when target_mode is caller_decides.
+      required: false
+      selector:
+        object:
+    data:
+      name: Extra Data
+      description: Additional data passed verbatim to the notify service (e.g. push sound).
+      required: false
+      selector:
+        object:
