@@ -31,7 +31,7 @@ class SNPSomeoneHomeSensor(
     CoordinatorEntity[SmartPresenceNotifyCoordinator], BinarySensorEntity
 ):
     _attr_has_entity_name = True
-    _attr_name = "Someone Home"
+    _attr_translation_key = "someone_home"
     _attr_device_class = BinarySensorDeviceClass.PRESENCE
     _attr_icon = "mdi:home-account"
 

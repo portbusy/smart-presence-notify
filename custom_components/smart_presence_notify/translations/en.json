@@ -82,6 +82,21 @@
       "admin_required": "You must select an admin person when 'Admin person only' mode is active."
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "someone_home": {
+        "name": "Someone Home"
+      }
+    },
+    "sensor": {
+      "queue_count": {
+        "name": "Queue Count"
+      },
+      "last_sent": {
+        "name": "Last Sent"
+      }
+    }
+  },
   "selector": {
     "target_mode": {
       "options": {
