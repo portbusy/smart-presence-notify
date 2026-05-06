@@ -231,7 +231,8 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     await self._async_call_service(service_full, title, message, extra)
                     recipients.append(service_full)
 
-            self._record_sent(title, recipients, priority)
+            if recipients:
+                self._record_sent(title, recipients, priority)
             return
 
         await self._enqueue(title, message, priority, extra)
