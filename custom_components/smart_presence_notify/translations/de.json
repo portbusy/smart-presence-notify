@@ -91,6 +91,9 @@
       }
     },
     "sensor": {
+      "home_persons": {
+        "name": "Personen zu Hause"
+      },
       "queue_count": {
         "name": "Nachrichten in der Warteschlange"
       },

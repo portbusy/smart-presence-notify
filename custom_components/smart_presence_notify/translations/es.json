@@ -91,6 +91,9 @@
       }
     },
     "sensor": {
+      "home_persons": {
+        "name": "Personas en casa"
+      },
       "queue_count": {
         "name": "Mensajes en cola"
       },

@@ -30,6 +30,15 @@ class SNPSensorDescription(SensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
     SNPSensorDescription(
+        key="home_persons",
+        translation_key="home_persons",
+        icon="mdi:account-group",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="persons",
+        value_fn=lambda data: len(data.home_persons),
+        extra_fn=lambda data: {"persons": data.home_persons},
+    ),
+    SNPSensorDescription(
         key="queue_count",
         translation_key="queue_count",
         icon="mdi:bell-badge",

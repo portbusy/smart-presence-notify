@@ -91,6 +91,9 @@
       }
     },
     "sensor": {
+      "home_persons": {
+        "name": "Home Persons"
+      },
       "queue_count": {
         "name": "Queue Count"
       },
