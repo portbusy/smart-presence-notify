@@ -142,3 +142,31 @@ async def test_single_admin_no_admin_selected_shows_error(hass: HomeAssistant):
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == "admin_required"
+
+
+async def test_step2_invalid_service_format_shows_error(hass: HomeAssistant):
+    """A service without domain prefix must produce an error in the persons step."""
+    hass.states.async_set("person.mario", "home")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={
+            "name": "Test",
+            "target_mode": "broadcast",
+            "queue_mode": "fifo",
+            "queue_timeout_minutes": 0,
+            "fallback_mode": "discard",
+            "fallback_service": "",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"person.mario__services": ["telegram_senza_dominio"]},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"].get("base") == "invalid_service_format"

@@ -36,7 +36,8 @@
       "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
       "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
-      "admin_required": "You must select an admin person when 'Admin person only' mode is active."
+      "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
+      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify is already set up. Use the Configure button to change settings."
@@ -79,7 +80,8 @@
       "invalid_timeout": "Timeout must be 0 (disabled) or a positive number of minutes.",
       "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
-      "admin_required": "You must select an admin person when 'Admin person only' mode is active."
+      "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
+      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram)."
     }
   },
   "entity": {

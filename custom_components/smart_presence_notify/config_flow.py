@@ -1,6 +1,7 @@
 """Config flow for Smart Presence Notify."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -73,6 +74,9 @@ def _validate_global_settings(user_input: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
+_SERVICE_RE = re.compile(r"^[\w]+\.[\w]+$")
+
+
 def _validate_persons(
     persons: dict[str, Any], target_mode: str | None
 ) -> dict[str, str]:
@@ -80,7 +84,13 @@ def _validate_persons(
     errors: dict[str, str] = {}
     if not persons:
         errors["base"] = "no_persons"
-    elif target_mode == TargetMode.SINGLE_ADMIN:
+        return errors
+    for cfg in persons.values():
+        for svc in cfg.get(CONF_NOTIFY_SERVICES, []):
+            if not _SERVICE_RE.match(svc):
+                errors["base"] = "invalid_service_format"
+                return errors
+    if target_mode == TargetMode.SINGLE_ADMIN:
         admin_count = sum(1 for p in persons.values() if p.get(CONF_IS_ADMIN))
         if admin_count != 1:
             errors["base"] = "admin_required"
