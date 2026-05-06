@@ -337,10 +337,8 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_expire_notification(
         self, notification: PendingNotification
     ) -> None:
-        current = self.data
-        if not any(n.id == notification.id for n in current.queue):
+        if not any(n.id == notification.id for n in self.data.queue):
             return
-        new_queue = [n for n in current.queue if n.id != notification.id]
         fallback_mode = self.config_entry.data.get(CONF_FALLBACK_MODE, FallbackMode.DISCARD)
 
         if fallback_mode == FallbackMode.NOTIFY_FALLBACK:
@@ -348,5 +346,9 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 notification.title, notification.message, notification.extra_data
             )
 
-        self.async_set_updated_data(replace(current, queue=new_queue))
+        # Re-read self.data after the potential await: notifications added
+        # concurrently during the fallback call must not be overwritten.
+        fresh = self.data
+        new_queue = [n for n in fresh.queue if n.id != notification.id]
+        self.async_set_updated_data(replace(fresh, queue=new_queue))
         await self._store.async_save(new_queue)

@@ -274,6 +274,41 @@ async def test_notification_expires_with_fallback(hass):
     assert coord.data.queue == []
 
 
+async def test_expire_preserves_notifications_enqueued_during_fallback(hass):
+    """Notifications enqueued while expiry fallback is in flight must not be lost."""
+    entry = make_entry(
+        queue_timeout_minutes=60,
+        fallback_mode="notify_fallback",
+        fallback_service="notify.telegram",
+    )
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Expiring", "Body")
+    expiring = coord.data.queue[0]
+
+    async_mock_service(hass, "notify", "telegram")
+    _injected = False
+    _real_fallback = coord._async_send_to_fallback
+
+    async def _fallback_and_inject(title: str, message: str, extra: dict) -> str | None:
+        nonlocal _injected
+        result = await _real_fallback(title, message, extra)
+        if not _injected:
+            _injected = True
+            await coord._enqueue("New", "During expiry", "normal", {})
+        return result
+
+    coord._async_send_to_fallback = _fallback_and_inject
+
+    await coord._async_expire_notification(expiring)
+
+    assert len(coord.data.queue) == 1
+    assert coord.data.queue[0].title == "New"
+
+
 async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):
     """Queue must not be drained when arrived person has no notify_services."""
     entry = make_entry(persons={
