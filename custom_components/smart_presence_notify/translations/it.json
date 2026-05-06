@@ -36,7 +36,8 @@
       "invalid_timeout": "Il timeout deve essere 0 (disabilitato) oppure un numero positivo di minuti.",
       "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
-      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'."
+      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
+      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify è già configurato. Usa il pulsante Configura per modificare le impostazioni."
@@ -79,7 +80,26 @@
       "invalid_timeout": "Il timeout deve essere 0 (disabilitato) oppure un numero positivo di minuti.",
       "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
-      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'."
+      "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
+      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram)."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "someone_home": {
+        "name": "Qualcuno a casa"
+      }
+    },
+    "sensor": {
+      "home_persons": {
+        "name": "Persone a casa"
+      },
+      "queue_count": {
+        "name": "Messaggi in coda"
+      },
+      "last_sent": {
+        "name": "Ultimo inviato"
+      }
     }
   },
   "selector": {
