@@ -1,8 +1,12 @@
 """Tests for data models."""
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
 
+import pytest
+
+from custom_components.smart_presence_notify.const import Priority
 from custom_components.smart_presence_notify.models import PendingNotification
 
 
@@ -13,7 +17,7 @@ def test_pending_notification_roundtrip():
         id="abc-123",
         title="Test",
         message="Hello",
-        priority="normal",
+        priority=Priority.NORMAL,
         created_at=now,
         expires_at=expires,
         extra_data={"push": {"sound": "default"}},
@@ -22,7 +26,8 @@ def test_pending_notification_roundtrip():
     restored = PendingNotification.from_dict(d)
     assert restored.id == "abc-123"
     assert restored.title == "Test"
-    assert restored.priority == "normal"
+    assert restored.priority == Priority.NORMAL
+    assert restored.priority == "normal"  # StrEnum: value equality with str
     assert restored.created_at == now
     assert restored.expires_at == expires
     assert restored.extra_data == {"push": {"sound": "default"}}
@@ -34,7 +39,7 @@ def test_pending_notification_no_expiry_roundtrip():
         id="xyz",
         title="T",
         message="M",
-        priority="high",
+        priority=Priority.HIGH,
         created_at=now,
         expires_at=None,
         extra_data={},
@@ -42,3 +47,17 @@ def test_pending_notification_no_expiry_roundtrip():
     d = notif.to_dict()
     restored = PendingNotification.from_dict(d)
     assert restored.expires_at is None
+
+
+def test_pending_notification_is_frozen():
+    notif = PendingNotification(
+        id="x",
+        title="T",
+        message="M",
+        priority=Priority.NORMAL,
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        expires_at=None,
+        extra_data={},
+    )
+    with pytest.raises(FrozenInstanceError):
+        notif.title = "mutated"  # type: ignore[misc]

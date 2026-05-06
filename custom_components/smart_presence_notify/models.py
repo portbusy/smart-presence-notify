@@ -3,18 +3,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
+
+from .const import Priority
 
 if TYPE_CHECKING:
     from .coordinator import SmartPresenceNotifyCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class PendingNotification:
     id: str
     title: str
     message: str
-    priority: Literal["normal", "high"]
+    priority: Priority
     created_at: datetime
     expires_at: datetime | None
     extra_data: dict[str, Any]
@@ -36,7 +38,7 @@ class PendingNotification:
             id=data["id"],
             title=data["title"],
             message=data["message"],
-            priority=data["priority"],
+            priority=Priority(data["priority"]),
             created_at=datetime.fromisoformat(data["created_at"]),
             expires_at=(
                 datetime.fromisoformat(data["expires_at"])
@@ -47,15 +49,15 @@ class PendingNotification:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotificationRecord:
     title: str
     sent_at: datetime
     recipients: list[str]
-    priority: Literal["normal", "high"]
+    priority: Priority
 
 
-@dataclass
+@dataclass(frozen=True)
 class CoordinatorData:
     queue: list[PendingNotification]
     last_sent: NotificationRecord | None
