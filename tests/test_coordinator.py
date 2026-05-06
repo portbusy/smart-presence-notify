@@ -298,6 +298,36 @@ async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):
     assert len(coord.data.queue) == 1
 
 
+async def test_drain_preserves_notifications_enqueued_during_drain(hass, mock_config_entry):
+    """Notifications enqueued while drain is in flight must not be discarded."""
+    hass.states.async_set("person.mario", "not_home")
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Pre", "Before")
+    assert len(coord.data.queue) == 1
+
+    async_mock_service(hass, "notify", "mobile_app_mario")
+    _injected = False
+    _real_call = coord._async_call_service
+
+    async def _intercept(service_full: str, title: str, message: str, extra: dict) -> None:
+        nonlocal _injected
+        await _real_call(service_full, title, message, extra)
+        if not _injected:
+            _injected = True
+            await coord._enqueue("During", "Drain", "normal", {})
+
+    coord._async_call_service = _intercept
+
+    hass.states.async_set("person.mario", "home")
+    await hass.async_block_till_done()
+
+    assert len(coord.data.queue) == 1
+    assert coord.data.queue[0].title == "During"
+
+
 async def test_queue_persists_across_reinit(hass, mock_config_entry):
     hass.states.async_set("person.mario", "not_home")
     hass.states.async_set("person.lucia", "not_home")
