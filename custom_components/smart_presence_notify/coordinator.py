@@ -44,7 +44,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._store = SNPStore(hass)
         self._timeout_unsubs: dict[str, Callable[[], None]] = {}
         self._presence_unsub: Callable[[], None] | None = None
-        self._drain_lock = asyncio.Lock()
+        self._drain_in_progress = False
 
     async def async_initialize(self) -> None:
         """Load queue from storage and start presence listener."""
@@ -58,9 +58,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 home_persons=home_persons,
             )
         )
-        self._presence_unsub = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._handle_state_changed
-        )
+        self._register_presence_listener()
         for notification in queue:
             if notification.expires_at:
                 self._schedule_timeout(notification)
@@ -73,6 +71,35 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         for unsub in self._timeout_unsubs.values():
             unsub()
         self._timeout_unsubs.clear()
+
+    @callback
+    def _register_presence_listener(self) -> None:
+        """Register (or re-register) the state-change listener for configured persons.
+
+        Uses EVENT_STATE_CHANGED with an event_filter so only person entities
+        in config reach the handler — equivalent efficiency to
+        async_track_state_change_event but with synchronous dispatch.
+        """
+        if self._presence_unsub:
+            self._presence_unsub()
+        configured_persons = frozenset(
+            self.config_entry.data.get(CONF_PERSONS, {}).keys()
+        )
+
+        @callback
+        def _filter(event_data: dict) -> bool:
+            return event_data.get("entity_id") in configured_persons
+
+        self._presence_unsub = self.hass.bus.async_listen(
+            EVENT_STATE_CHANGED,
+            self._handle_state_changed,
+            event_filter=_filter,
+        )
+
+    @callback
+    def async_reload_presence_listener(self) -> None:
+        """Rebuild the presence listener after an options-flow update."""
+        self._register_presence_listener()
 
     def _get_presence(self) -> tuple[bool, list[str]]:
         configured_persons = self.config_entry.data.get(CONF_PERSONS, {})
@@ -261,10 +288,15 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_drain_queue(self, arrived_person: str) -> None:
         """Drain the pending queue for the person who just arrived.
 
-        The lock prevents two concurrent arrivals from triggering duplicate
-        sends: the second drain sees an empty queue and exits early.
+        The flag prevents two concurrent arrivals from triggering duplicate
+        sends. HA's event loop is single-threaded, so the flag is set
+        synchronously before the first await; any second drain task sees it
+        and exits early without sending duplicates.
         """
-        async with self._drain_lock:
+        if self._drain_in_progress:
+            return
+        self._drain_in_progress = True
+        try:
             queue = self.data.queue
             if not queue:
                 return
@@ -326,6 +358,8 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 )
             )
             await self._store.async_save(new_queue)
+        finally:
+            self._drain_in_progress = False
 
     def _schedule_timeout(self, notification: PendingNotification) -> None:
         @callback

@@ -392,6 +392,18 @@ async def test_drain_preserves_notifications_enqueued_during_drain(hass, mock_co
     assert coord.data.queue[0].title == "During"
 
 
+async def test_presence_listener_ignores_unconfigured_entities(hass, mock_config_entry):
+    """Listener must not react to person entities not in config."""
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    initial_home = coord.data.someone_home
+    hass.states.async_set("person.unconfigured", "home")
+    await hass.async_block_till_done()
+    assert coord.data.someone_home == initial_home
+
+
 async def test_queue_persists_across_reinit(hass, mock_config_entry):
     hass.states.async_set("person.mario", "not_home")
     hass.states.async_set("person.lucia", "not_home")
