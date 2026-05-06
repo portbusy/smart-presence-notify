@@ -127,6 +127,11 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_call_service(
         self, service_full: str, title: str, message: str, extra: dict[str, Any]
     ) -> None:
+        if "." not in service_full:
+            _LOGGER.error(
+                "Invalid service %r: expected 'domain.service' format", service_full
+            )
+            return
         domain, service = service_full.split(".", 1)
         data: dict[str, Any] = {"title": title, "message": message}
         if extra:
