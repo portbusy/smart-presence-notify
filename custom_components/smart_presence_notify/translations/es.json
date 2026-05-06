@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Configuración general",
+        "description": "Smart Presence Notify envía notificaciones solo cuando hay alguien en casa. Si la casa está vacía, los mensajes entrantes se retienen y se entregan cuando alguien llega. Configura quién recibe las notificaciones y cómo se gestionan los mensajes retenidos.",
+        "data": {
+          "name": "Nombre de visualización",
+          "target_mode": "¿Quién recibe las notificaciones cuando hay alguien en casa?",
+          "queue_mode": "Cuando alguien llega a casa, ¿qué mensajes retenidos enviar?",
+          "queue_timeout_minutes": "Retener mensajes hasta (minutos, 0 = indefinidamente)",
+          "fallback_mode": "¿Qué hacer con los mensajes expirados?",
+          "fallback_service": "Reenviar mensajes expirados a este servicio"
+        },
+        "data_description": {
+          "name": "El nombre que aparece en la página Dispositivos y Servicios de Home Assistant.",
+          "target_mode": "Elige quién recibe cada notificación mientras hay alguien en casa:\n- **Todos en casa** — todos los miembros del hogar actualmente en casa.\n- **Solo el administrador** — únicamente el administrador designado; si está fuera, el primer miembro que llegue a casa lo recibirá.\n- **Definido por automatización / script** — tu automatización o script establece el destinatario cada vez.",
+          "queue_mode": "Se aplica solo cuando la casa estaba vacía y los mensajes se retuvieron:\n- **Todos los mensajes, del más antiguo al más reciente** — cada mensaje retenido se entrega en orden de llegada.\n- **Solo el mensaje más reciente** — solo se envía el último mensaje; los anteriores se descartan.\n- **Resumen** — un único mensaje con los títulos de todos los mensajes retenidos.",
+          "queue_timeout_minutes": "Después de este número de minutos, los mensajes retenidos se consideran expirados y se tratan según la regla indicada. Establece **0** para retenerlos indefinidamente hasta que alguien llegue a casa.",
+          "fallback_mode": "Qué ocurre cuando un mensaje retenido expira:\n- **Descartar silenciosamente** — el mensaje se elimina sin notificación.\n- **Reenviar a otro servicio** — el mensaje se envía al servicio especificado (p. ej. un bot de Telegram o email), aunque nadie esté en casa.",
+          "fallback_service": "El servicio de notificación que recibe los mensajes expirados (p. ej. `notify.telegram`). Requerido solo cuando se elige 'Reenviar a otro servicio'."
+        }
+      },
+      "persons": {
+        "title": "A quién notificar — Asignación de servicios",
+        "description": "Para cada persona registrada en Home Assistant, elige qué servicios de notificación usar. Todos los servicios seleccionados para una persona recibirán la notificación (útil para configuraciones con varios dispositivos).\n\nDeja a una persona sin servicio para excluirla de Smart Presence Notify.",
+        "data": {
+          "admin_person": "Administrador"
+        },
+        "data_description": {
+          "admin_person": "El miembro del hogar que siempre recibe notificaciones en el modo 'Solo el administrador'. Si esta persona está fuera, el primero en llegar a casa recibirá la notificación."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "El tiempo de espera debe ser 0 (desactivado) o un número positivo de minutos.",
+      "fallback_service_required": "Debes especificar un servicio de notificación cuando se selecciona 'Reenviar a otro servicio'.",
+      "no_persons": "Al menos una persona debe tener un servicio de notificación asignado.",
+      "admin_required": "Debes seleccionar un administrador cuando el modo 'Solo el administrador' está activo.",
+      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram)."
+    },
+    "abort": {
+      "already_configured": "Smart Presence Notify ya está configurado. Usa el botón Configurar para cambiar los ajustes."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Configuración general",
+        "description": "Smart Presence Notify envía notificaciones solo cuando hay alguien en casa. Si la casa está vacía, los mensajes entrantes se retienen y se entregan cuando alguien llega. Actualiza quién recibe las notificaciones y cómo se gestionan los mensajes retenidos.",
+        "data": {
+          "name": "Nombre de visualización",
+          "target_mode": "¿Quién recibe las notificaciones cuando hay alguien en casa?",
+          "queue_mode": "Cuando alguien llega a casa, ¿qué mensajes retenidos enviar?",
+          "queue_timeout_minutes": "Retener mensajes hasta (minutos, 0 = indefinidamente)",
+          "fallback_mode": "¿Qué hacer con los mensajes expirados?",
+          "fallback_service": "Reenviar mensajes expirados a este servicio"
+        },
+        "data_description": {
+          "name": "El nombre que aparece en la página Dispositivos y Servicios de Home Assistant.",
+          "target_mode": "Elige quién recibe cada notificación mientras hay alguien en casa:\n- **Todos en casa** — todos los miembros del hogar actualmente en casa.\n- **Solo el administrador** — únicamente el administrador designado; si está fuera, el primer miembro que llegue a casa lo recibirá.\n- **Definido por automatización / script** — tu automatización o script establece el destinatario cada vez.",
+          "queue_mode": "Se aplica solo cuando la casa estaba vacía y los mensajes se retuvieron:\n- **Todos los mensajes, del más antiguo al más reciente** — cada mensaje retenido se entrega en orden de llegada.\n- **Solo el mensaje más reciente** — solo se envía el último mensaje; los anteriores se descartan.\n- **Resumen** — un único mensaje con los títulos de todos los mensajes retenidos.",
+          "queue_timeout_minutes": "Después de este número de minutos, los mensajes retenidos se consideran expirados y se tratan según la regla indicada. Establece **0** para retenerlos indefinidamente hasta que alguien llegue a casa.",
+          "fallback_mode": "Qué ocurre cuando un mensaje retenido expira:\n- **Descartar silenciosamente** — el mensaje se elimina sin notificación.\n- **Reenviar a otro servicio** — el mensaje se envía al servicio especificado (p. ej. un bot de Telegram o email), aunque nadie esté en casa.",
+          "fallback_service": "El servicio de notificación que recibe los mensajes expirados (p. ej. `notify.telegram`). Requerido solo cuando se elige 'Reenviar a otro servicio'."
+        }
+      },
+      "persons": {
+        "title": "A quién notificar — Asignación de servicios",
+        "description": "Para cada persona registrada en Home Assistant, elige qué servicios de notificación usar. Todos los servicios seleccionados para una persona recibirán la notificación (útil para configuraciones con varios dispositivos).\n\nDeja a una persona sin servicio para excluirla de Smart Presence Notify.",
+        "data": {
+          "admin_person": "Administrador"
+        },
+        "data_description": {
+          "admin_person": "El miembro del hogar que siempre recibe notificaciones en el modo 'Solo el administrador'. Si esta persona está fuera, el primero en llegar a casa recibirá la notificación."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "El tiempo de espera debe ser 0 (desactivado) o un número positivo de minutos.",
+      "fallback_service_required": "Debes especificar un servicio de notificación cuando se selecciona 'Reenviar a otro servicio'.",
+      "no_persons": "Al menos una persona debe tener un servicio de notificación asignado.",
+      "admin_required": "Debes seleccionar un administrador cuando el modo 'Solo el administrador' está activo.",
+      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram)."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "someone_home": {
+        "name": "Alguien en casa"
+      }
+    },
+    "sensor": {
+      "queue_count": {
+        "name": "Mensajes en cola"
+      },
+      "last_sent": {
+        "name": "Último enviado"
+      }
+    }
+  },
+  "selector": {
+    "target_mode": {
+      "options": {
+        "broadcast": "Todos en casa",
+        "single_admin": "Solo el administrador",
+        "caller_decides": "Definido por automatización / script"
+      }
+    },
+    "queue_mode": {
+      "options": {
+        "fifo": "Todos los mensajes, del más antiguo al más reciente",
+        "last_only": "Solo el mensaje más reciente",
+        "summary": "Resumen"
+      }
+    },
+    "fallback_mode": {
+      "options": {
+        "discard": "Descartar silenciosamente",
+        "notify_fallback": "Reenviar a otro servicio"
+      }
+    }
+  }
+}

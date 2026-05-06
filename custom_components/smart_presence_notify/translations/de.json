@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Allgemeine Einstellungen",
+        "description": "Smart Presence Notify sendet Benachrichtigungen nur, wenn jemand zu Hause ist. Wenn das Haus leer ist, werden eingehende Nachrichten zurückgehalten und zugestellt, sobald jemand heimkommt. Konfiguriere, wer benachrichtigt wird und wie zurückgehaltene Nachrichten verwaltet werden.",
+        "data": {
+          "name": "Anzeigename",
+          "target_mode": "Wer wird benachrichtigt, wenn jemand zu Hause ist?",
+          "queue_mode": "Wenn jemand heimkommt, welche zurückgehaltenen Nachrichten senden?",
+          "queue_timeout_minutes": "Nachrichten zurückhalten für (Minuten, 0 = unbegrenzt)",
+          "fallback_mode": "Was mit abgelaufenen Nachrichten tun?",
+          "fallback_service": "Abgelaufene Nachrichten an diesen Dienst weiterleiten"
+        },
+        "data_description": {
+          "name": "Der Name, der auf der Seite Geräte & Dienste in Home Assistant angezeigt wird.",
+          "target_mode": "Wähle, wer jede Benachrichtigung erhält, solange jemand zu Hause ist:\n- **Alle Anwesenden** — alle Haushaltsmitglieder, die derzeit zu Hause sind.\n- **Nur Administrator** — ausschließlich der festgelegte Administrator; ist dieser abwesend, erhält die erste heimkommende Person die Benachrichtigung.\n- **Von Automatisierung / Skript festgelegt** — deine Automatisierung oder dein Skript legt den Empfänger jedes Mal fest.",
+          "queue_mode": "Gilt nur, wenn das Haus leer war und Nachrichten zurückgehalten wurden:\n- **Alle Nachrichten, älteste zuerst** — jede zurückgehaltene Nachricht wird in Eingangsreihenfolge zugestellt.\n- **Nur die neueste Nachricht** — nur die letzte Nachricht wird gesendet; ältere werden verworfen.\n- **Zusammenfassung** — eine einzige Nachricht mit den Titeln aller zurückgehaltenen Nachrichten.",
+          "queue_timeout_minutes": "Nach dieser Anzahl von Minuten gelten zurückgehaltene Nachrichten als abgelaufen und werden gemäß der nachstehenden Regel behandelt. Auf **0** setzen, um sie unbegrenzt zurückzuhalten, bis jemand heimkommt.",
+          "fallback_mode": "Was passiert, wenn eine zurückgehaltene Nachricht abläuft:\n- **Lautlos verwerfen** — die Nachricht wird ohne Benachrichtigung gelöscht.\n- **An einen anderen Dienst weiterleiten** — die Nachricht wird an den angegebenen Dienst gesendet (z. B. ein Telegram-Bot oder E-Mail), auch wenn niemand zu Hause ist.",
+          "fallback_service": "Der Benachrichtigungsdienst, der abgelaufene Nachrichten empfängt (z. B. `notify.telegram`). Nur erforderlich, wenn 'An einen anderen Dienst weiterleiten' gewählt wird."
+        }
+      },
+      "persons": {
+        "title": "Wer benachrichtigt wird — Dienstzuordnung",
+        "description": "Wähle für jede in Home Assistant erfasste Person, welche Benachrichtigungsdienste verwendet werden sollen. Alle ausgewählten Dienste einer Person erhalten die Benachrichtigung (nützlich für Mehrgerät-Konfigurationen).\n\nLasse eine Person ohne Dienst, um sie von Smart Presence Notify auszuschließen.",
+        "data": {
+          "admin_person": "Administrator"
+        },
+        "data_description": {
+          "admin_person": "Das Haushaltsmitglied, das im Modus 'Nur Administrator' immer Benachrichtigungen erhält. Ist diese Person abwesend, erhält stattdessen die erste heimkommende Person die Benachrichtigung."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Der Timeout muss 0 (deaktiviert) oder eine positive Anzahl von Minuten sein.",
+      "fallback_service_required": "Du musst einen Benachrichtigungsdienst angeben, wenn 'An einen anderen Dienst weiterleiten' ausgewählt ist.",
+      "no_persons": "Mindestens einer Person muss ein Benachrichtigungsdienst zugewiesen sein.",
+      "admin_required": "Du musst einen Administrator auswählen, wenn der Modus 'Nur Administrator' aktiv ist.",
+      "invalid_service_format": "Jeder Benachrichtigungsdienst muss im Format 'domain.dienst' angegeben werden (z. B. notify.telegram)."
+    },
+    "abort": {
+      "already_configured": "Smart Presence Notify ist bereits eingerichtet. Verwende die Schaltfläche Konfigurieren, um die Einstellungen zu ändern."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Allgemeine Einstellungen",
+        "description": "Smart Presence Notify sendet Benachrichtigungen nur, wenn jemand zu Hause ist. Wenn das Haus leer ist, werden eingehende Nachrichten zurückgehalten und zugestellt, sobald jemand heimkommt. Aktualisiere, wer benachrichtigt wird und wie zurückgehaltene Nachrichten verwaltet werden.",
+        "data": {
+          "name": "Anzeigename",
+          "target_mode": "Wer wird benachrichtigt, wenn jemand zu Hause ist?",
+          "queue_mode": "Wenn jemand heimkommt, welche zurückgehaltenen Nachrichten senden?",
+          "queue_timeout_minutes": "Nachrichten zurückhalten für (Minuten, 0 = unbegrenzt)",
+          "fallback_mode": "Was mit abgelaufenen Nachrichten tun?",
+          "fallback_service": "Abgelaufene Nachrichten an diesen Dienst weiterleiten"
+        },
+        "data_description": {
+          "name": "Der Name, der auf der Seite Geräte & Dienste in Home Assistant angezeigt wird.",
+          "target_mode": "Wähle, wer jede Benachrichtigung erhält, solange jemand zu Hause ist:\n- **Alle Anwesenden** — alle Haushaltsmitglieder, die derzeit zu Hause sind.\n- **Nur Administrator** — ausschließlich der festgelegte Administrator; ist dieser abwesend, erhält die erste heimkommende Person die Benachrichtigung.\n- **Von Automatisierung / Skript festgelegt** — deine Automatisierung oder dein Skript legt den Empfänger jedes Mal fest.",
+          "queue_mode": "Gilt nur, wenn das Haus leer war und Nachrichten zurückgehalten wurden:\n- **Alle Nachrichten, älteste zuerst** — jede zurückgehaltene Nachricht wird in Eingangsreihenfolge zugestellt.\n- **Nur die neueste Nachricht** — nur die letzte Nachricht wird gesendet; ältere werden verworfen.\n- **Zusammenfassung** — eine einzige Nachricht mit den Titeln aller zurückgehaltenen Nachrichten.",
+          "queue_timeout_minutes": "Nach dieser Anzahl von Minuten gelten zurückgehaltene Nachrichten als abgelaufen und werden gemäß der nachstehenden Regel behandelt. Auf **0** setzen, um sie unbegrenzt zurückzuhalten, bis jemand heimkommt.",
+          "fallback_mode": "Was passiert, wenn eine zurückgehaltene Nachricht abläuft:\n- **Lautlos verwerfen** — die Nachricht wird ohne Benachrichtigung gelöscht.\n- **An einen anderen Dienst weiterleiten** — die Nachricht wird an den angegebenen Dienst gesendet (z. B. ein Telegram-Bot oder E-Mail), auch wenn niemand zu Hause ist.",
+          "fallback_service": "Der Benachrichtigungsdienst, der abgelaufene Nachrichten empfängt (z. B. `notify.telegram`). Nur erforderlich, wenn 'An einen anderen Dienst weiterleiten' gewählt wird."
+        }
+      },
+      "persons": {
+        "title": "Wer benachrichtigt wird — Dienstzuordnung",
+        "description": "Wähle für jede in Home Assistant erfasste Person, welche Benachrichtigungsdienste verwendet werden sollen. Alle ausgewählten Dienste einer Person erhalten die Benachrichtigung (nützlich für Mehrgerät-Konfigurationen).\n\nLasse eine Person ohne Dienst, um sie von Smart Presence Notify auszuschließen.",
+        "data": {
+          "admin_person": "Administrator"
+        },
+        "data_description": {
+          "admin_person": "Das Haushaltsmitglied, das im Modus 'Nur Administrator' immer Benachrichtigungen erhält. Ist diese Person abwesend, erhält stattdessen die erste heimkommende Person die Benachrichtigung."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Der Timeout muss 0 (deaktiviert) oder eine positive Anzahl von Minuten sein.",
+      "fallback_service_required": "Du musst einen Benachrichtigungsdienst angeben, wenn 'An einen anderen Dienst weiterleiten' ausgewählt ist.",
+      "no_persons": "Mindestens einer Person muss ein Benachrichtigungsdienst zugewiesen sein.",
+      "admin_required": "Du musst einen Administrator auswählen, wenn der Modus 'Nur Administrator' aktiv ist.",
+      "invalid_service_format": "Jeder Benachrichtigungsdienst muss im Format 'domain.dienst' angegeben werden (z. B. notify.telegram)."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "someone_home": {
+        "name": "Jemand zu Hause"
+      }
+    },
+    "sensor": {
+      "queue_count": {
+        "name": "Nachrichten in der Warteschlange"
+      },
+      "last_sent": {
+        "name": "Zuletzt gesendet"
+      }
+    }
+  },
+  "selector": {
+    "target_mode": {
+      "options": {
+        "broadcast": "Alle Anwesenden",
+        "single_admin": "Nur Administrator",
+        "caller_decides": "Von Automatisierung / Skript festgelegt"
+      }
+    },
+    "queue_mode": {
+      "options": {
+        "fifo": "Alle Nachrichten, älteste zuerst",
+        "last_only": "Nur die neueste Nachricht",
+        "summary": "Zusammenfassung"
+      }
+    },
+    "fallback_mode": {
+      "options": {
+        "discard": "Lautlos verwerfen",
+        "notify_fallback": "An einen anderen Dienst weiterleiten"
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Paramètres généraux",
+        "description": "Smart Presence Notify envoie des notifications uniquement lorsque quelqu'un est à la maison. Si la maison est vide, les messages entrants sont mis en attente et transmis dès que quelqu'un rentre. Configurez qui reçoit les notifications et comment les messages en attente sont gérés.",
+        "data": {
+          "name": "Nom d'affichage",
+          "target_mode": "Qui reçoit les notifications lorsque quelqu'un est à la maison ?",
+          "queue_mode": "Lorsque quelqu'un rentre, quels messages en attente envoyer ?",
+          "queue_timeout_minutes": "Conserver les messages pendant (minutes, 0 = indéfiniment)",
+          "fallback_mode": "Que faire des messages expirés ?",
+          "fallback_service": "Transférer les messages expirés vers ce service"
+        },
+        "data_description": {
+          "name": "Le nom affiché dans la page Appareils et Services de Home Assistant.",
+          "target_mode": "Choisissez qui reçoit chaque notification lorsque quelqu'un est à la maison :\n- **Tous les présents** — tous les membres du foyer actuellement à la maison.\n- **Administrateur uniquement** — uniquement l'administrateur désigné ; s'il est absent, la première personne qui rentre reçoit la notification.\n- **Défini par automatisation / script** — votre automatisation ou script définit le destinataire à chaque fois.",
+          "queue_mode": "S'applique uniquement lorsque la maison était vide et que des messages ont été mis en attente :\n- **Tous les messages, du plus ancien au plus récent** — chaque message en attente est transmis dans l'ordre d'arrivée.\n- **Message le plus récent uniquement** — seul le dernier message est envoyé ; les précédents sont supprimés.\n- **Résumé** — un seul message listant les titres de tous les messages en attente.",
+          "queue_timeout_minutes": "Après ce nombre de minutes, les messages en attente sont considérés comme expirés et traités selon la règle ci-dessous. Réglez sur **0** pour les conserver indéfiniment jusqu'au retour de quelqu'un.",
+          "fallback_mode": "Ce qui se passe lorsqu'un message en attente expire :\n- **Supprimer silencieusement** — le message est supprimé sans notification.\n- **Transférer vers un autre service** — le message est envoyé au service indiqué (ex. un bot Telegram ou e-mail), même si personne n'est à la maison.",
+          "fallback_service": "Le service de notification qui reçoit les messages expirés (ex. `notify.telegram`). Requis uniquement lorsque 'Transférer vers un autre service' est sélectionné."
+        }
+      },
+      "persons": {
+        "title": "Qui notifier — Association des services",
+        "description": "Pour chaque personne suivie dans Home Assistant, choisissez quels services de notification utiliser. Tous les services sélectionnés pour une personne reçoivent la notification (utile pour les configurations multi-appareils).\n\nLaissez une personne sans service pour l'exclure de Smart Presence Notify.",
+        "data": {
+          "admin_person": "Administrateur"
+        },
+        "data_description": {
+          "admin_person": "Le membre du foyer qui reçoit toujours les notifications en mode 'Administrateur uniquement'. Si cette personne est absente, la première à rentrer reçoit la notification à la place."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Le délai doit être 0 (désactivé) ou un nombre positif de minutes.",
+      "fallback_service_required": "Vous devez spécifier un service de notification lorsque 'Transférer vers un autre service' est sélectionné.",
+      "no_persons": "Au moins une personne doit avoir un service de notification assigné.",
+      "admin_required": "Vous devez sélectionner un administrateur lorsque le mode 'Administrateur uniquement' est actif.",
+      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram)."
+    },
+    "abort": {
+      "already_configured": "Smart Presence Notify est déjà configuré. Utilisez le bouton Configurer pour modifier les paramètres."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Smart Presence Notify — Paramètres généraux",
+        "description": "Smart Presence Notify envoie des notifications uniquement lorsque quelqu'un est à la maison. Si la maison est vide, les messages entrants sont mis en attente et transmis dès que quelqu'un rentre. Mettez à jour qui reçoit les notifications et comment les messages en attente sont gérés.",
+        "data": {
+          "name": "Nom d'affichage",
+          "target_mode": "Qui reçoit les notifications lorsque quelqu'un est à la maison ?",
+          "queue_mode": "Lorsque quelqu'un rentre, quels messages en attente envoyer ?",
+          "queue_timeout_minutes": "Conserver les messages pendant (minutes, 0 = indéfiniment)",
+          "fallback_mode": "Que faire des messages expirés ?",
+          "fallback_service": "Transférer les messages expirés vers ce service"
+        },
+        "data_description": {
+          "name": "Le nom affiché dans la page Appareils et Services de Home Assistant.",
+          "target_mode": "Choisissez qui reçoit chaque notification lorsque quelqu'un est à la maison :\n- **Tous les présents** — tous les membres du foyer actuellement à la maison.\n- **Administrateur uniquement** — uniquement l'administrateur désigné ; s'il est absent, la première personne qui rentre reçoit la notification.\n- **Défini par automatisation / script** — votre automatisation ou script définit le destinataire à chaque fois.",
+          "queue_mode": "S'applique uniquement lorsque la maison était vide et que des messages ont été mis en attente :\n- **Tous les messages, du plus ancien au plus récent** — chaque message en attente est transmis dans l'ordre d'arrivée.\n- **Message le plus récent uniquement** — seul le dernier message est envoyé ; les précédents sont supprimés.\n- **Résumé** — un seul message listant les titres de tous les messages en attente.",
+          "queue_timeout_minutes": "Après ce nombre de minutes, les messages en attente sont considérés comme expirés et traités selon la règle ci-dessous. Réglez sur **0** pour les conserver indéfiniment jusqu'au retour de quelqu'un.",
+          "fallback_mode": "Ce qui se passe lorsqu'un message en attente expire :\n- **Supprimer silencieusement** — le message est supprimé sans notification.\n- **Transférer vers un autre service** — le message est envoyé au service indiqué (ex. un bot Telegram ou e-mail), même si personne n'est à la maison.",
+          "fallback_service": "Le service de notification qui reçoit les messages expirés (ex. `notify.telegram`). Requis uniquement lorsque 'Transférer vers un autre service' est sélectionné."
+        }
+      },
+      "persons": {
+        "title": "Qui notifier — Association des services",
+        "description": "Pour chaque personne suivie dans Home Assistant, choisissez quels services de notification utiliser. Tous les services sélectionnés pour une personne reçoivent la notification (utile pour les configurations multi-appareils).\n\nLaissez une personne sans service pour l'exclure de Smart Presence Notify.",
+        "data": {
+          "admin_person": "Administrateur"
+        },
+        "data_description": {
+          "admin_person": "Le membre du foyer qui reçoit toujours les notifications en mode 'Administrateur uniquement'. Si cette personne est absente, la première à rentrer reçoit la notification à la place."
+        }
+      }
+    },
+    "error": {
+      "invalid_timeout": "Le délai doit être 0 (désactivé) ou un nombre positif de minutes.",
+      "fallback_service_required": "Vous devez spécifier un service de notification lorsque 'Transférer vers un autre service' est sélectionné.",
+      "no_persons": "Au moins une personne doit avoir un service de notification assigné.",
+      "admin_required": "Vous devez sélectionner un administrateur lorsque le mode 'Administrateur uniquement' est actif.",
+      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram)."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "someone_home": {
+        "name": "Quelqu'un à la maison"
+      }
+    },
+    "sensor": {
+      "queue_count": {
+        "name": "Messages en attente"
+      },
+      "last_sent": {
+        "name": "Dernier envoyé"
+      }
+    }
+  },
+  "selector": {
+    "target_mode": {
+      "options": {
+        "broadcast": "Tous les présents",
+        "single_admin": "Administrateur uniquement",
+        "caller_decides": "Défini par automatisation / script"
+      }
+    },
+    "queue_mode": {
+      "options": {
+        "fifo": "Tous les messages, du plus ancien au plus récent",
+        "last_only": "Message le plus récent uniquement",
+        "summary": "Résumé"
+      }
+    },
+    "fallback_mode": {
+      "options": {
+        "discard": "Supprimer silencieusement",
+        "notify_fallback": "Transférer vers un autre service"
+      }
+    }
+  }
+}
