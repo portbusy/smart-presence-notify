@@ -26,9 +26,6 @@ SERVICE_SCHEMA = vol.Schema(
 
 
 async def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    if hass.services.has_service(DOMAIN, SERVICE_SEND):
-        return
-
     async def handle_send(call: ServiceCall) -> None:
         runtime: SNPRuntimeData = entry.runtime_data
         coordinator = runtime.coordinator
