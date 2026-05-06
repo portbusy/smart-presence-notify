@@ -298,6 +298,35 @@ async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):
     assert len(coord.data.queue) == 1
 
 
+async def test_concurrent_arrivals_do_not_duplicate_notifications(hass):
+    """Two persons arriving at the same time must not send the same notification twice."""
+    entry = make_entry(persons={
+        "person.mario": {"notify_services": ["notify.mobile_app_mario"], "is_admin": True},
+        "person.lucia": {"notify_services": ["notify.mobile_app_lucia"], "is_admin": False},
+    })
+    hass.states.async_set("person.mario", "not_home")
+    hass.states.async_set("person.lucia", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification("Alert", "Body")
+    assert len(coord.data.queue) == 1
+
+    mario_calls = async_mock_service(hass, "notify", "mobile_app_mario")
+    lucia_calls = async_mock_service(hass, "notify", "mobile_app_lucia")
+
+    # Both arrive "simultaneously" — two drain tasks are spawned before either runs
+    with patch("asyncio.sleep", new_callable=AsyncMock):
+        hass.states.async_set("person.mario", "home")
+        hass.states.async_set("person.lucia", "home")
+        await hass.async_block_till_done()
+
+    total_calls = len(mario_calls) + len(lucia_calls)
+    assert total_calls == 1, f"Expected 1 notification send, got {total_calls}"
+    assert coord.data.queue == []
+
+
 async def test_drain_preserves_notifications_enqueued_during_drain(hass, mock_config_entry):
     """Notifications enqueued while drain is in flight must not be discarded."""
     hass.states.async_set("person.mario", "not_home")

@@ -44,6 +44,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._store = SNPStore(hass)
         self._timeout_unsubs: dict[str, Callable[[], None]] = {}
         self._presence_unsub: Callable[[], None] | None = None
+        self._drain_lock = asyncio.Lock()
 
     async def async_initialize(self) -> None:
         """Load queue from storage and start presence listener."""
@@ -252,68 +253,73 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self._schedule_timeout(notif)
 
     async def _async_drain_queue(self, arrived_person: str) -> None:
-        """Drain the pending queue for the person who just arrived."""
-        queue = self.data.queue
-        if not queue:
-            return
+        """Drain the pending queue for the person who just arrived.
 
-        drain_ids = {n.id for n in queue}
-        queue_mode = self.config_entry.data.get(CONF_QUEUE_MODE, QueueMode.FIFO)
-        recipients = self._get_notify_services_for_person(arrived_person)
-        if not recipients:
-            _LOGGER.debug(
-                "Skipping queue drain: %s has no notify_services configured",
-                arrived_person,
-            )
-            return
+        The lock prevents two concurrent arrivals from triggering duplicate
+        sends: the second drain sees an empty queue and exits early.
+        """
+        async with self._drain_lock:
+            queue = self.data.queue
+            if not queue:
+                return
 
-        if queue_mode == QueueMode.SUMMARY:
-            titles = ", ".join(n.title for n in queue)
-            summary_msg = f"{len(queue)} messages while you were away: {titles}"
-            for service_full in recipients:
-                await self._async_call_service(
-                    service_full, "Missed notifications", summary_msg, {}
+            drain_ids = {n.id for n in queue}
+            queue_mode = self.config_entry.data.get(CONF_QUEUE_MODE, QueueMode.FIFO)
+            recipients = self._get_notify_services_for_person(arrived_person)
+            if not recipients:
+                _LOGGER.debug(
+                    "Skipping queue drain: %s has no notify_services configured",
+                    arrived_person,
                 )
-            last_title = "Missed notifications"
-        elif queue_mode == QueueMode.LAST_ONLY:
-            notif = queue[-1]
-            for service_full in recipients:
-                await self._async_call_service(
-                    service_full, notif.title, notif.message, notif.extra_data
-                )
-            last_title = notif.title
-        else:  # FIFO
-            for i, notif in enumerate(queue):
+                return
+
+            if queue_mode == QueueMode.SUMMARY:
+                titles = ", ".join(n.title for n in queue)
+                summary_msg = f"{len(queue)} messages while you were away: {titles}"
+                for service_full in recipients:
+                    await self._async_call_service(
+                        service_full, "Missed notifications", summary_msg, {}
+                    )
+                last_title = "Missed notifications"
+            elif queue_mode == QueueMode.LAST_ONLY:
+                notif = queue[-1]
                 for service_full in recipients:
                     await self._async_call_service(
                         service_full, notif.title, notif.message, notif.extra_data
                     )
-                if i < len(queue) - 1:
-                    await asyncio.sleep(1)
-            last_title = queue[-1].title
+                last_title = notif.title
+            else:  # FIFO
+                for i, notif in enumerate(queue):
+                    for service_full in recipients:
+                        await self._async_call_service(
+                            service_full, notif.title, notif.message, notif.extra_data
+                        )
+                    if i < len(queue) - 1:
+                        await asyncio.sleep(1)
+                last_title = queue[-1].title
 
-        for nid in drain_ids:
-            if (unsub := self._timeout_unsubs.pop(nid, None)):
-                unsub()
+            for nid in drain_ids:
+                if (unsub := self._timeout_unsubs.pop(nid, None)):
+                    unsub()
 
-        # Re-read self.data after the awaits above: new notifications may have
-        # been enqueued via _enqueue while service calls were in flight.
-        # Using the stale snapshot would overwrite those additions.
-        fresh = self.data
-        new_queue = [n for n in fresh.queue if n.id not in drain_ids]
-        self.async_set_updated_data(
-            replace(
-                fresh,
-                queue=new_queue,
-                last_sent=NotificationRecord(
-                    title=last_title,
-                    sent_at=datetime.now(timezone.utc),
-                    recipients=recipients,
-                    priority=queue[-1].priority,
-                ),
+            # Re-read self.data after the awaits above: new notifications may have
+            # been enqueued via _enqueue while service calls were in flight.
+            # Using the stale snapshot would overwrite those additions.
+            fresh = self.data
+            new_queue = [n for n in fresh.queue if n.id not in drain_ids]
+            self.async_set_updated_data(
+                replace(
+                    fresh,
+                    queue=new_queue,
+                    last_sent=NotificationRecord(
+                        title=last_title,
+                        sent_at=datetime.now(timezone.utc),
+                        recipients=recipients,
+                        priority=queue[-1].priority,
+                    ),
+                )
             )
-        )
-        await self._store.async_save(new_queue)
+            await self._store.async_save(new_queue)
 
     def _schedule_timeout(self, notification: PendingNotification) -> None:
         @callback
