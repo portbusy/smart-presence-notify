@@ -20,3 +20,4 @@ build/
 # AI tools
 .claude/
 docs/superpowers/
+PROMPT.md
