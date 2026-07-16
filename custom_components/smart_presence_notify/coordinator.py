@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
+import re
 import uuid
 from collections.abc import Callable
 from dataclasses import replace
@@ -25,15 +27,30 @@ from .const import (
     CONF_QUEUE_TIMEOUT,
     CONF_TARGET_MODE,
     DOMAIN,
+    EVENT_MOBILE_APP_NOTIFICATION_ACTION,
+    EVENT_RESPONSE,
     FallbackMode,
     Priority,
     QueueMode,
+    RESPONSE_PRESET_YES_NO,
     TargetMode,
 )
 from .models import CoordinatorData, NotificationRecord, PendingNotification
 from .store import SNPStore
 
 _LOGGER = logging.getLogger(__name__)
+
+_RESPONSE_ACTION_RE = re.compile(
+    r"^SNP_(YES|NO)_([a-f0-9]{32})\.([A-Za-z0-9_-]+)$"
+)
+_MAX_ANSWERED_RESPONSES = 256
+_RESPONSE_TITLES = {
+    "de": ("Ja", "Nein"),
+    "en": ("Yes", "No"),
+    "es": ("Sí", "No"),
+    "fr": ("Oui", "Non"),
+    "it": ("Sì", "No"),
+}
 
 
 class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -44,6 +61,8 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._store = SNPStore(hass)
         self._timeout_unsubs: dict[str, Callable[[], None]] = {}
         self._presence_unsub: Callable[[], None] | None = None
+        self._response_unsub: Callable[[], None] | None = None
+        self._answered_response_nonces: dict[str, None] = {}
         self._drain_in_progress = False
 
     async def async_initialize(self) -> None:
@@ -59,6 +78,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             )
         )
         self._register_presence_listener()
+        self._response_unsub = self.hass.bus.async_listen(
+            EVENT_MOBILE_APP_NOTIFICATION_ACTION,
+            self._handle_notification_action,
+        )
         for notification in queue:
             if notification.expires_at:
                 self._schedule_timeout(notification)
@@ -68,6 +91,9 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if self._presence_unsub:
             self._presence_unsub()
             self._presence_unsub = None
+        if self._response_unsub:
+            self._response_unsub()
+            self._response_unsub = None
         for unsub in self._timeout_unsubs.values():
             unsub()
         self._timeout_unsubs.clear()
@@ -143,6 +169,42 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if arrived and current.queue:
             self.hass.async_create_task(self._async_drain_queue(entity_id))
 
+    @callback
+    def _handle_notification_action(self, event: Event) -> None:
+        """Translate a Companion App action into an integration response event."""
+        action = event.data.get("action")
+        if not isinstance(action, str) or not (
+            match := _RESPONSE_ACTION_RE.match(action)
+        ):
+            return
+
+        response, nonce, encoded_response_id = match.groups()
+        if nonce in self._answered_response_nonces:
+            return
+
+        try:
+            padding = "=" * (-len(encoded_response_id) % 4)
+            response_id = base64.urlsafe_b64decode(
+                encoded_response_id + padding
+            ).decode("utf-8")
+        except (UnicodeDecodeError, ValueError):
+            _LOGGER.warning("Ignoring malformed notification response action")
+            return
+
+        if len(self._answered_response_nonces) >= _MAX_ANSWERED_RESPONSES:
+            self._answered_response_nonces.pop(
+                next(iter(self._answered_response_nonces))
+            )
+        self._answered_response_nonces[nonce] = None
+
+        response_data = {
+            "response_id": response_id,
+            "response": response.lower(),
+        }
+        if device_id := event.data.get("device_id"):
+            response_data["device_id"] = device_id
+        self.hass.bus.async_fire(EVENT_RESPONSE, response_data)
+
     async def _async_update_data(self) -> CoordinatorData:
         # Push-only coordinator: state updated exclusively via async_set_updated_data.
         return self.data
@@ -161,9 +223,64 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             return
         domain, service = service_full.split(".", 1)
         data: dict[str, Any] = {"title": title, "message": message}
-        if extra:
-            data.update(extra)
+        service_extra = extra
+        if (
+            not service_full.startswith("notify.mobile_app_")
+            and self._has_response_actions(extra)
+        ):
+            # Companion App actions are not portable to arbitrary providers.
+            # Preserve any other provider-specific notification data.
+            service_extra = {
+                key: value for key, value in extra.items() if key != "actions"
+            }
+        if service_extra:
+            data["data"] = service_extra
         await self.hass.services.async_call(domain, service, data)
+
+    @staticmethod
+    def _has_response_actions(extra: dict[str, Any]) -> bool:
+        """Return whether data contains actions generated by this integration."""
+        actions = extra.get("actions")
+        return bool(
+            isinstance(actions, list)
+            and actions
+            and all(
+                isinstance(action, dict)
+                and isinstance(action.get("action"), str)
+                and _RESPONSE_ACTION_RE.match(action["action"])
+                for action in actions
+            )
+        )
+
+    def _with_response_preset(
+        self,
+        extra_data: dict[str, Any] | None,
+        response_preset: str | None,
+        response_id: str | None,
+    ) -> dict[str, Any]:
+        """Return notification data with unique Companion App response actions."""
+        extra = dict(extra_data or {})
+        if response_preset != RESPONSE_PRESET_YES_NO or response_id is None:
+            return extra
+
+        encoded_response_id = base64.urlsafe_b64encode(
+            response_id.encode("utf-8")
+        ).decode("ascii").rstrip("=")
+        nonce = uuid.uuid4().hex
+        yes_title, no_title = _RESPONSE_TITLES.get(
+            self.hass.config.language, _RESPONSE_TITLES["en"]
+        )
+        extra["actions"] = [
+            {
+                "action": f"SNP_YES_{nonce}.{encoded_response_id}",
+                "title": yes_title,
+            },
+            {
+                "action": f"SNP_NO_{nonce}.{encoded_response_id}",
+                "title": no_title,
+            },
+        ]
+        return extra
 
     async def _async_notify_person(
         self, person_entity_id: str, title: str, message: str, extra: dict[str, Any]
@@ -214,9 +331,11 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         target_override: str | None = None,
         targets: list[str] | None = None,
         extra_data: dict[str, Any] | None = None,
+        response_preset: str | None = None,
+        response_id: str | None = None,
     ) -> None:
         """Route a notification based on presence and configuration."""
-        extra: dict[str, Any] = extra_data or {}
+        extra = self._with_response_preset(extra_data, response_preset, response_id)
 
         if target_override:
             await self._async_call_service(target_override, title, message, extra)
@@ -311,7 +430,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 )
                 return
 
-            if queue_mode == QueueMode.SUMMARY:
+            # A summary cannot retain per-notification action buttons. Fall back
+            # to FIFO whenever at least one queued notification is actionable.
+            has_actions = any(self._has_response_actions(n.extra_data) for n in queue)
+            if queue_mode == QueueMode.SUMMARY and not has_actions:
                 titles = ", ".join(n.title for n in queue)
                 summary_msg = f"{len(queue)} messages while you were away: {titles}"
                 for service_full in recipients:
@@ -377,6 +499,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_expire_notification(
         self, notification: PendingNotification
     ) -> None:
+        # Usually removed by the scheduled callback before this coroutine runs.
+        # Also cancel it here for direct/manual expiry calls.
+        if unsub := self._timeout_unsubs.pop(notification.id, None):
+            unsub()
         if not any(n.id == notification.id for n in self.data.queue):
             return
         fallback_mode = self.config_entry.data.get(CONF_FALLBACK_MODE, FallbackMode.DISCARD)

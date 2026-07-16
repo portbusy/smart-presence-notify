@@ -8,6 +8,11 @@ from homeassistant.const import Platform
 DOMAIN = "smart_presence_notify"
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
+EVENT_MOBILE_APP_NOTIFICATION_ACTION = "mobile_app_notification_action"
+EVENT_RESPONSE = f"{DOMAIN}_response"
+
+RESPONSE_PRESET_YES_NO = "yes_no"
+
 STORE_KEY = "smart_presence_notify"
 STORE_VERSION = 1
 

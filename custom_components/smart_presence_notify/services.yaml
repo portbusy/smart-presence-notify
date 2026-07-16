@@ -38,7 +38,21 @@ send:
         object:
     data:
       name: Extra Data
-      description: Additional data passed verbatim to the notify service (e.g. push sound).
+      description: Additional notification data passed to the notify service (e.g. push sound or tag).
       required: false
       selector:
         object:
+    response_preset:
+      name: Response Preset
+      description: Optional preset for actionable Companion App notifications. Currently supports Yes/No.
+      required: false
+      selector:
+        select:
+          options:
+            - yes_no
+    response_id:
+      name: Response ID
+      description: Required with a response preset. Identifies the question in smart_presence_notify_response events.
+      required: false
+      selector:
+        text:

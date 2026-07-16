@@ -14,6 +14,7 @@ Home Assistant custom integration that routes notifications based on who is home
 - Priority support: high-priority notifications bypass the queue and control device sound/interruption
 - Notification timeout with optional fallback service
 - Multi-device support per person
+- Optional actionable Yes/No notifications for Home Assistant Companion App devices
 - 100% UI configuration — no YAML required
 
 ## Installation
@@ -49,6 +50,39 @@ data:
   message: "Left open for 10 minutes"
   priority: normal  # or: high
 ```
+
+### Optional Yes/No responses
+
+Add a Yes/No preset to a notification sent to a `notify.mobile_app_*` service:
+
+```yaml
+action: smart_presence_notify.send
+data:
+  title: "Garage door"
+  message: "Do you want to close it?"
+  response_preset: yes_no
+  response_id: close_garage
+```
+
+The first button pressed fires a `smart_presence_notify_response` event:
+
+```yaml
+event_type: smart_presence_notify_response
+event_data:
+  response_id: close_garage
+  response: yes  # or: no
+```
+
+This feature is opt-in. It is supported by Home Assistant Companion App notify
+services; preset buttons are omitted for other notification providers. Button
+labels follow the Home Assistant language for English, Italian, Spanish, French,
+and German, with English as the fallback. A response is not guaranteed, so
+automations should still define a timeout. When
+a question is broadcast to multiple people, only the first response received
+during the current Home Assistant runtime is emitted. Restarting Home Assistant
+resets this in-memory duplicate protection.
+Queued actionable notifications retain their buttons; summary queue mode falls
+back to FIFO so individual questions are not collapsed into a summary.
 
 ## Exposed Entities
 
