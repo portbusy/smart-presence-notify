@@ -4,10 +4,11 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
 from custom_components.smart_presence_notify.coordinator import SmartPresenceNotifyCoordinator
+from custom_components.smart_presence_notify.const import EVENT_RESPONSE
 from tests.conftest import make_entry
 
 
@@ -76,6 +77,101 @@ async def test_send_broadcast_to_home_persons(hass, mock_config_entry):
     # Verify coordinator recorded the sent notification
     assert coord.data.last_sent.title == "Door"
     assert coord.data.last_sent.recipients == ["notify.mobile_app_mario"]
+
+
+async def test_extra_notification_data_is_nested(hass, mock_config_entry):
+    hass.states.async_set("person.mario", "home")
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+    await coord.async_send_notification(
+        "Door", "Open", extra_data={"tag": "garage"}
+    )
+
+    assert calls[0].data == {
+        "title": "Door",
+        "message": "Open",
+        "data": {"tag": "garage"},
+    }
+
+
+async def test_yes_no_preset_emits_only_first_response(hass, mock_config_entry):
+    hass.config.language = "it"
+    hass.states.async_set("person.mario", "home")
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+    responses: list[Event] = []
+    hass.bus.async_listen(EVENT_RESPONSE, responses.append)
+
+    await coord.async_send_notification(
+        "Garage",
+        "Close it?",
+        response_preset="yes_no",
+        response_id="close_garage",
+    )
+
+    actions = calls[0].data["data"]["actions"]
+    assert [action["title"] for action in actions] == ["Sì", "No"]
+
+    hass.bus.async_fire(
+        "mobile_app_notification_action",
+        {"action": actions[0]["action"], "device_id": "phone_mario"},
+    )
+    hass.bus.async_fire(
+        "mobile_app_notification_action",
+        {"action": actions[1]["action"], "device_id": "phone_lucia"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(responses) == 1
+    assert responses[0].data == {
+        "response_id": "close_garage",
+        "response": "yes",
+        "device_id": "phone_mario",
+    }
+
+
+async def test_unrelated_notification_action_is_ignored(hass, mock_config_entry):
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    responses: list[Event] = []
+    hass.bus.async_listen(EVENT_RESPONSE, responses.append)
+    hass.bus.async_fire("mobile_app_notification_action", {"action": "OTHER"})
+    await hass.async_block_till_done()
+
+    assert responses == []
+
+
+async def test_yes_no_actions_are_not_sent_to_non_mobile_provider(
+    hass, mock_config_entry
+):
+    hass.states.async_set("person.mario", "home")
+    mock_config_entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, mock_config_entry)
+    await coord.async_initialize()
+
+    calls = async_mock_service(hass, "notify", "telegram")
+    await coord.async_send_notification(
+        "Question",
+        "Answer?",
+        target_override="notify.telegram",
+        extra_data={"parse_mode": "html"},
+        response_preset="yes_no",
+        response_id="telegram_question",
+    )
+
+    assert calls[0].data == {
+        "title": "Question",
+        "message": "Answer?",
+        "data": {"parse_mode": "html"},
+    }
 
 
 async def test_send_target_override(hass, mock_config_entry):
@@ -235,6 +331,29 @@ async def test_drain_summary_on_arrival(hass):
     assert coord.data.last_sent.title == "Missed notifications"
 
 
+async def test_actionable_queue_uses_fifo_in_summary_mode(hass):
+    entry = make_entry(queue_mode="summary")
+    hass.states.async_set("person.mario", "not_home")
+    entry.add_to_hass(hass)
+    coord = SmartPresenceNotifyCoordinator(hass, entry)
+    await coord.async_initialize()
+
+    await coord.async_send_notification(
+        "Question",
+        "Answer?",
+        response_preset="yes_no",
+        response_id="queued_question",
+    )
+    calls = async_mock_service(hass, "notify", "mobile_app_mario")
+
+    hass.states.async_set("person.mario", "home")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["title"] == "Question"
+    assert len(calls[0].data["data"]["actions"]) == 2
+
+
 async def test_notification_expires_discard(hass):
     entry = make_entry(queue_timeout_minutes=60)
     hass.states.async_set("person.mario", "not_home")
@@ -307,6 +426,7 @@ async def test_expire_preserves_notifications_enqueued_during_fallback(hass):
 
     assert len(coord.data.queue) == 1
     assert coord.data.queue[0].title == "New"
+    await coord.async_shutdown()
 
 
 async def test_drain_skipped_when_arrived_person_has_no_notify_services(hass):

@@ -6,6 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
@@ -105,7 +106,7 @@ class SNPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -124,7 +125,7 @@ class SNPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_persons(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         person_entities = list(self.hass.states.async_entity_ids("person"))
         notify_options = list(self.hass.services.async_services_for_domain("notify"))
@@ -154,9 +155,7 @@ class SNPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> SNPOptionsFlow:
+    def async_get_options_flow() -> SNPOptionsFlow:
         return SNPOptionsFlow()
 
 
@@ -168,12 +167,12 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -192,7 +191,7 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_persons(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         person_entities = list(self.hass.states.async_entity_ids("person"))
         notify_options = list(self.hass.services.async_services_for_domain("notify"))
