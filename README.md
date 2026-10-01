@@ -1,6 +1,14 @@
 # Smart Presence Notify
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="custom_components/smart_presence_notify/brand/dark_logo@2x.png">
+  <img alt="Smart Presence Notify" src="custom_components/smart_presence_notify/brand/logo@2x.png" width="360">
+</picture>
+
 Home Assistant custom integration that routes notifications based on who is home.
+
+The integration includes light/dark brand images and high-resolution variants.
+Home Assistant 2026.3 or newer displays these bundled images automatically.
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/v/release/portbusy/smart-presence-notify)](https://github.com/portbusy/smart-presence-notify/releases)
