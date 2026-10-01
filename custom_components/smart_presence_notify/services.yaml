@@ -56,3 +56,7 @@ send:
       required: false
       selector:
         text:
+
+retry_pending:
+  name: Retry Pending Notifications
+  description: Restart delivery attempts for pending messages after repairing notification destinations.

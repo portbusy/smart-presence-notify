@@ -5,10 +5,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.core import Event, HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_mock_service,
+)
 
-from custom_components.smart_presence_notify.coordinator import SmartPresenceNotifyCoordinator
 from custom_components.smart_presence_notify.const import EVENT_RESPONSE
+from custom_components.smart_presence_notify.coordinator import (
+    SmartPresenceNotifyCoordinator,
+)
 from tests.conftest import make_entry
 
 
@@ -408,19 +413,10 @@ async def test_expire_preserves_notifications_enqueued_during_fallback(hass):
     await coord.async_send_notification("Expiring", "Body")
     expiring = coord.data.queue[0]
 
-    async_mock_service(hass, "notify", "telegram")
-    _injected = False
-    _real_fallback = coord._async_send_to_fallback
+    async def fallback_and_inject(call):
+        await coord._enqueue("New", "During expiry", "normal", {})
 
-    async def _fallback_and_inject(title: str, message: str, extra: dict) -> str | None:
-        nonlocal _injected
-        result = await _real_fallback(title, message, extra)
-        if not _injected:
-            _injected = True
-            await coord._enqueue("New", "During expiry", "normal", {})
-        return result
-
-    coord._async_send_to_fallback = _fallback_and_inject
+    hass.services.async_register("notify", "telegram", fallback_and_inject)
 
     await coord._async_expire_notification(expiring)
 

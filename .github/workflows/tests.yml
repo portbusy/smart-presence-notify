@@ -13,11 +13,11 @@ jobs:
       matrix:
         include:
           - python-version: "3.14"
-            ha-version: "2026.7.1"
-            pytest-ha-version: "0.13.345"
+            ha-version: "2026.9.4"
+            pytest-ha-version: "0.13.367"
           - python-version: "3.14"
-            ha-version: "2026.7.2"
-            pytest-ha-version: "0.13.346"
+            ha-version: "2026.10.0b0"
+            pytest-ha-version: "0.13.367"
 
     steps:
       - uses: actions/checkout@v7
@@ -30,9 +30,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install \
-            homeassistant==${{ matrix.ha-version }} \
             pytest-homeassistant-custom-component==${{ matrix.pytest-ha-version }} \
-            "pytest-asyncio>=1.4.0"
+            "pytest-asyncio==1.4.0"
+          # The published fixture package currently pins stable HA; exercise beta
+          # with the same fixtures after installing its runtime dependencies.
+          pip install --upgrade homeassistant==${{ matrix.ha-version }}
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
