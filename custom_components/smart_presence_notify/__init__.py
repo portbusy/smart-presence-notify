@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import PLATFORMS
 from .coordinator import SmartPresenceNotifyCoordinator
-from .models import SNPRuntimeData
+from .runtime import SNPRuntimeData
 from .services import async_register_services, unregister_services
 from .sources import NotificationSources
 

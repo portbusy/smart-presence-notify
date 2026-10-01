@@ -16,6 +16,7 @@ from functools import wraps
 from typing import Any
 
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
@@ -56,7 +57,6 @@ from .models import (
     NotificationRecord,
     PendingNotification,
     ResponseToken,
-    SNPConfigEntry,
     _validate_json,
 )
 from .sources import NotificationSources
@@ -99,7 +99,9 @@ def _track_delivery(method):
 class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Route notifications and retain only destinations that still need delivery."""
 
-    def __init__(self, hass: HomeAssistant, entry: SNPConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self._store = SNPStore(hass)
         self.notification_sources = NotificationSources(hass, entry.entry_id)

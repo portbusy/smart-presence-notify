@@ -5,15 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from math import isfinite
-from typing import TYPE_CHECKING, Any
-
-from homeassistant.config_entries import ConfigEntry
+from typing import Any
 
 from .const import Priority
 from .validation import notification_target
-
-if TYPE_CHECKING:
-    from .coordinator import SmartPresenceNotifyCoordinator
 
 
 @dataclass(frozen=True)
@@ -109,14 +104,6 @@ class ResponseToken:
     expires_at: datetime | None = None
     sent: bool = False
     answered: bool = False
-
-
-@dataclass
-class SNPRuntimeData:
-    coordinator: SmartPresenceNotifyCoordinator
-
-
-type SNPConfigEntry = ConfigEntry[SNPRuntimeData]
 
 
 def _date(value: str) -> datetime:

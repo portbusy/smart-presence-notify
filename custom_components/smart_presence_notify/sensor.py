@@ -21,7 +21,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MAX_DELIVERY_ATTEMPTS, QUEUE_PREVIEW_LIMIT
 from .coordinator import SmartPresenceNotifyCoordinator
-from .models import CoordinatorData, SNPRuntimeData
+from .models import CoordinatorData
+from .runtime import SNPRuntimeData
 
 
 @dataclass(frozen=True, kw_only=True)

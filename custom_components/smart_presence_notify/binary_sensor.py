@@ -1,4 +1,5 @@
 """Binary sensor entities for Smart Presence Notify."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SmartPresenceNotifyCoordinator
-from .models import SNPRuntimeData
+from .runtime import SNPRuntimeData
 
 
 async def async_setup_entry(

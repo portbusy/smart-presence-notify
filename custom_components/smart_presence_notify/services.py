@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, RESPONSE_PRESET_YES_NO, Priority
-from .models import SNPRuntimeData
+from .runtime import SNPRuntimeData
 from .validation import notification_target
 
 SERVICE_SEND = "send"

@@ -5,12 +5,14 @@ from __future__ import annotations
 import asyncio
 import re
 from collections import OrderedDict
+from collections.abc import Coroutine
 from hashlib import sha256
-from typing import TYPE_CHECKING
+from typing import Any, Protocol
 
 import voluptuous as vol
 from homeassistant.components import persistent_notification
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -19,16 +21,30 @@ from .const import (
     CONF_FORWARD_TEXT,
     CONF_FORWARD_UPDATES,
 )
+from .sources import NotificationSources
 from .validation import mobile_target
 
-if TYPE_CHECKING:
-    from .coordinator import SmartPresenceNotifyCoordinator
+
+class ForwardingHost(Protocol):
+    """The forwarder's delivery contract, without a reverse coordinator import."""
+
+    hass: HomeAssistant
+    config_entry: ConfigEntry
+    notification_sources: NotificationSources
+
+    def _start_task(self, coroutine: Coroutine[Any, Any, Any]) -> None: ...
+
+    def _set_error(self, message: str, recipients: list[str]) -> None: ...
+
+    async def async_forward_notification(
+        self, title: str, message: str, targets: list[str], extra: dict[str, Any]
+    ) -> None: ...
 
 
 class NotificationForwarder:
     """Observe added/updated notifications; never replay existing notifications."""
 
-    def __init__(self, coordinator: SmartPresenceNotifyCoordinator) -> None:
+    def __init__(self, coordinator: ForwardingHost) -> None:
         self.coordinator = coordinator
         self._seen: OrderedDict[str, bytes] = OrderedDict()
         self._locks: dict[str, asyncio.Lock] = {}
