@@ -10,7 +10,8 @@
           "queue_mode": "Quando qualcuno rientra, quali messaggi in attesa inviare?",
           "queue_timeout_minutes": "Tieni i messaggi in attesa per (minuti, 0 = illimitato)",
           "fallback_mode": "Cosa fare con i messaggi scaduti?",
-          "fallback_service": "Inoltra i messaggi scaduti a questo servizio"
+          "fallback_service": "Inoltra i messaggi scaduti a questo servizio",
+          "queue_limit": "Numero massimo di notifiche in coda"
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
@@ -37,7 +38,13 @@
       "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
       "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
-      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram)."
+      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram).",
+      "invalid_queue_limit": "Usa un limite tra 1 e 1000.",
+      "invalid_mobile_target": "Usa servizi notify.mobile_app_…",
+      "mobile_targets_required": "Seleziona almeno un dispositivo mobile.",
+      "invalid_patterns": "Usa al massimo 20 filtri ID, lunghi fino a 200 caratteri.",
+      "sources_required": "Seleziona almeno una sorgente o inserisci un filtro ID.",
+      "invalid_sources": "Seleziona sorgenti valide (al massimo 200)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify è già configurato. Usa il pulsante Configura per modificare le impostazioni."
@@ -54,7 +61,8 @@
           "queue_mode": "Quando qualcuno rientra, quali messaggi in attesa inviare?",
           "queue_timeout_minutes": "Tieni i messaggi in attesa per (minuti, 0 = illimitato)",
           "fallback_mode": "Cosa fare con i messaggi scaduti?",
-          "fallback_service": "Inoltra i messaggi scaduti a questo servizio"
+          "fallback_service": "Inoltra i messaggi scaduti a questo servizio",
+          "queue_limit": "Numero massimo di notifiche in coda"
         },
         "data_description": {
           "name": "Il nome che apparirà nella schermata Dispositivi & Servizi di Home Assistant.",
@@ -74,6 +82,28 @@
         "data_description": {
           "admin_person": "Il membro della famiglia che riceve le notifiche quando è attiva la modalità 'Solo la persona admin'. Se è fuori casa, la riceverà il primo che rientra."
         }
+      },
+      "init": {
+        "title": "Configura Smart Presence Notify",
+        "menu_options": {
+          "user": "Presenza e coda",
+          "forwarding": "Inoltro notifiche della campanella"
+        }
+      },
+      "forwarding": {
+        "title": "Inoltro ai dispositivi mobili",
+        "description": "Seleziona le integrazioni conosciute installate o gli ID osservati. Il rilevamento funziona anche a inoltro disattivato: riapri questa schermata dopo una nuova notifica. Gli ID osservati non indicano necessariamente un’integrazione. Per inoltrare tutto, seleziona esplicitamente Tutte le notifiche della campanella.",
+        "data": {
+          "forward_enabled": "Abilita inoltro",
+          "forward_targets": "Dispositivi mobili destinatari",
+          "forward_id_patterns": "Filtri ID aggiuntivi (avanzato)",
+          "forward_text": "Il titolo o messaggio contiene",
+          "forward_updates": "Inoltra anche gli aggiornamenti",
+          "forward_sources": "Integrazioni e notifiche da inoltrare"
+        },
+        "data_description": {
+          "forward_id_patterns": "I filtri manuali aggiungono altre notifiche a quelle selezionate. Nessuna selezione e nessun filtro: nessun inoltro. Il filtro testo deve sempre corrispondere."
+        }
       }
     },
     "error": {
@@ -81,7 +111,13 @@
       "fallback_service_required": "Devi specificare un servizio notify quando selezioni 'Inoltra a un altro servizio'.",
       "no_persons": "Almeno una persona deve avere un servizio notify assegnato.",
       "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
-      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram)."
+      "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram).",
+      "invalid_queue_limit": "Usa un limite tra 1 e 1000.",
+      "invalid_mobile_target": "Usa servizi notify.mobile_app_…",
+      "mobile_targets_required": "Seleziona almeno un dispositivo mobile.",
+      "invalid_patterns": "Usa al massimo 20 filtri ID, lunghi fino a 200 caratteri.",
+      "sources_required": "Seleziona almeno una sorgente o inserisci un filtro ID.",
+      "invalid_sources": "Seleziona sorgenti valide (al massimo 200)."
     }
   },
   "entity": {
@@ -99,6 +135,14 @@
       },
       "last_sent": {
         "name": "Ultimo inviato"
+      },
+      "delivery_status": {
+        "name": "Stato consegna"
+      }
+    },
+    "switch": {
+      "forward_notifications": {
+        "name": "Inoltra notifiche della campanella"
       }
     }
   },

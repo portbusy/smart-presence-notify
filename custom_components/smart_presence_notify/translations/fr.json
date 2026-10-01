@@ -10,7 +10,8 @@
           "queue_mode": "Lorsque quelqu'un rentre, quels messages en attente envoyer ?",
           "queue_timeout_minutes": "Conserver les messages pendant (minutes, 0 = indéfiniment)",
           "fallback_mode": "Que faire des messages expirés ?",
-          "fallback_service": "Transférer les messages expirés vers ce service"
+          "fallback_service": "Transférer les messages expirés vers ce service",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "Le nom affiché dans la page Appareils et Services de Home Assistant.",
@@ -37,7 +38,13 @@
       "fallback_service_required": "Vous devez spécifier un service de notification lorsque 'Transférer vers un autre service' est sélectionné.",
       "no_persons": "Au moins une personne doit avoir un service de notification assigné.",
       "admin_required": "Vous devez sélectionner un administrateur lorsque le mode 'Administrateur uniquement' est actif.",
-      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram)."
+      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Sélectionnez une source ou saisissez un filtre d’ID.",
+      "invalid_sources": "Sélectionnez des sources valides (200 maximum)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify est déjà configuré. Utilisez le bouton Configurer pour modifier les paramètres."
@@ -54,7 +61,8 @@
           "queue_mode": "Lorsque quelqu'un rentre, quels messages en attente envoyer ?",
           "queue_timeout_minutes": "Conserver les messages pendant (minutes, 0 = indéfiniment)",
           "fallback_mode": "Que faire des messages expirés ?",
-          "fallback_service": "Transférer les messages expirés vers ce service"
+          "fallback_service": "Transférer les messages expirés vers ce service",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "Le nom affiché dans la page Appareils et Services de Home Assistant.",
@@ -74,6 +82,28 @@
         "data_description": {
           "admin_person": "Le membre du foyer qui reçoit toujours les notifications en mode 'Administrateur uniquement'. Si cette personne est absente, la première à rentrer reçoit la notification à la place."
         }
+      },
+      "init": {
+        "title": "Configure Smart Presence Notify",
+        "menu_options": {
+          "user": "Presence and queue",
+          "forwarding": "Forward bell notifications"
+        }
+      },
+      "forwarding": {
+        "title": "Forward to mobile devices",
+        "description": "Sélectionnez les intégrations installées connues ou les ID observés. La détection fonctionne même sans transfert. Rouvrez cette page après une nouvelle notification. Les ID observés n’identifient pas nécessairement une intégration. Sélectionnez explicitement toutes les notifications pour tout transférer.",
+        "data": {
+          "forward_enabled": "Enable forwarding",
+          "forward_targets": "Mobile destinations",
+          "forward_id_patterns": "Filtres d’ID supplémentaires (avancé)",
+          "forward_text": "Title or message contains",
+          "forward_updates": "Forward updates too",
+          "forward_sources": "Intégrations et notifications à transférer"
+        },
+        "data_description": {
+          "forward_id_patterns": "Les filtres manuels ajoutent des notifications aux sources sélectionnées. Sans source ni filtre, rien n’est transféré. Le filtre de texte doit également correspondre."
+        }
       }
     },
     "error": {
@@ -81,7 +111,13 @@
       "fallback_service_required": "Vous devez spécifier un service de notification lorsque 'Transférer vers un autre service' est sélectionné.",
       "no_persons": "Au moins une personne doit avoir un service de notification assigné.",
       "admin_required": "Vous devez sélectionner un administrateur lorsque le mode 'Administrateur uniquement' est actif.",
-      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram)."
+      "invalid_service_format": "Chaque service de notification doit être au format 'domaine.service' (ex. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Sélectionnez une source ou saisissez un filtre d’ID.",
+      "invalid_sources": "Sélectionnez des sources valides (200 maximum)."
     }
   },
   "entity": {
@@ -99,6 +135,14 @@
       },
       "last_sent": {
         "name": "Dernier envoyé"
+      },
+      "delivery_status": {
+        "name": "Delivery status"
+      }
+    },
+    "switch": {
+      "forward_notifications": {
+        "name": "Forward bell notifications"
       }
     }
   },

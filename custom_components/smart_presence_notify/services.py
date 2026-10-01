@@ -1,4 +1,5 @@
 """Service registration for Smart Presence Notify."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -7,9 +8,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, RESPONSE_PRESET_YES_NO, Priority
-from .models import SNPRuntimeData
+from .runtime import SNPRuntimeData
+from .validation import notification_target
 
 SERVICE_SEND = "send"
+
 
 def _validate_response_fields(data: dict) -> dict:
     """Validate the optional actionable-notification fields together."""
@@ -22,9 +25,7 @@ def _validate_response_fields(data: dict) -> dict:
     if response_id and not preset:
         raise vol.Invalid("response_preset is required when response_id is set")
     if preset and "actions" in extra_data:
-        raise vol.Invalid(
-            "data.actions cannot be combined with response_preset"
-        )
+        raise vol.Invalid("data.actions cannot be combined with response_preset")
     return data
 
 
@@ -36,13 +37,11 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("priority", default=Priority.NORMAL): vol.In(
                 [p.value for p in Priority]
             ),
-            vol.Optional("target_override"): cv.string,
-            vol.Optional("targets"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("target_override"): notification_target,
+            vol.Optional("targets"): vol.All(cv.ensure_list, [notification_target]),
             vol.Optional("data"): dict,
             vol.Optional("response_preset"): vol.In([RESPONSE_PRESET_YES_NO]),
-            vol.Optional("response_id"): vol.All(
-                cv.string, vol.Length(min=1, max=64)
-            ),
+            vol.Optional("response_id"): vol.All(cv.string, vol.Length(min=1, max=64)),
         }
     ),
     _validate_response_fields,
@@ -64,8 +63,13 @@ async def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> No
             response_id=call.data.get("response_id"),
         )
 
+    async def handle_retry(call: ServiceCall) -> None:
+        await entry.runtime_data.coordinator.async_retry_pending()
+
     hass.services.async_register(DOMAIN, SERVICE_SEND, handle_send, SERVICE_SCHEMA)
+    hass.services.async_register(DOMAIN, "retry_pending", handle_retry, vol.Schema({}))
 
 
 def unregister_services(hass: HomeAssistant) -> None:
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
+    hass.services.async_remove(DOMAIN, "retry_pending")

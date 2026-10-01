@@ -4,7 +4,7 @@ Thanks for taking the time to contribute.
 
 ## Requirements
 
-- Python 3.13
+- Python 3.14
 - Home Assistant ≥ 2026.1.0
 
 ## Setup
@@ -13,7 +13,7 @@ Thanks for taking the time to contribute.
 git clone https://github.com/portbusy/smart-presence-notify.git
 cd smart-presence-notify
 python -m venv .venv && source .venv/bin/activate
-pip install homeassistant pip install -r requirements_test.txt
+pip install -r requirements_test.txt
 ```
 
 ## Running tests

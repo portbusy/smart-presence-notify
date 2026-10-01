@@ -1,4 +1,5 @@
 """Smart Presence Notify integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -6,21 +7,24 @@ from homeassistant.core import HomeAssistant
 
 from .const import PLATFORMS
 from .coordinator import SmartPresenceNotifyCoordinator
-from .models import SNPRuntimeData
+from .runtime import SNPRuntimeData
 from .services import async_register_services, unregister_services
+from .sources import NotificationSources
 
 type SNPConfigEntry = ConfigEntry[SNPRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> bool:
     coordinator = SmartPresenceNotifyCoordinator(hass, entry)
-    await coordinator.async_initialize()
-    entry.runtime_data = SNPRuntimeData(coordinator=coordinator)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await async_register_services(hass, entry)
-    entry.async_on_unload(
-        entry.add_update_listener(_async_reload_presence_on_update)
-    )
+    try:
+        await coordinator.async_initialize()
+        entry.runtime_data = SNPRuntimeData(coordinator=coordinator)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await async_register_services(hass, entry)
+    except BaseException:
+        await coordinator.async_shutdown()
+        raise
+    entry.async_on_unload(entry.add_update_listener(_async_reload_presence_on_update))
     return True
 
 
@@ -38,3 +42,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> bool
         await coordinator.async_shutdown()
         unregister_services(hass)
     return ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> None:
+    """Remove this entry's discovery catalogue when the integration is deleted."""
+    await NotificationSources(hass, entry.entry_id).async_remove()
