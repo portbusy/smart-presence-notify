@@ -10,7 +10,8 @@
           "queue_mode": "When someone arrives home, which held messages to send?",
           "queue_timeout_minutes": "Hold messages for up to (minutes, 0 = indefinitely)",
           "fallback_mode": "What to do with expired messages?",
-          "fallback_service": "Forward expired messages to this service"
+          "fallback_service": "Forward expired messages to this service",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
@@ -37,7 +38,13 @@
       "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
       "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
-      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram)."
+      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Select at least one source or enter an ID filter.",
+      "invalid_sources": "Select valid sources (at most 200)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify is already set up. Use the Configure button to change settings."
@@ -54,7 +61,8 @@
           "queue_mode": "When someone arrives home, which held messages to send?",
           "queue_timeout_minutes": "Hold messages for up to (minutes, 0 = indefinitely)",
           "fallback_mode": "What to do with expired messages?",
-          "fallback_service": "Forward expired messages to this service"
+          "fallback_service": "Forward expired messages to this service",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "The name shown in Home Assistant's Devices & Services page.",
@@ -74,6 +82,28 @@
         "data_description": {
           "admin_person": "The household member who always receives notifications in 'Admin person only' mode. If this person is away, the first person who arrives home gets the notification instead."
         }
+      },
+      "init": {
+        "title": "Configure Smart Presence Notify",
+        "menu_options": {
+          "user": "Presence and queue",
+          "forwarding": "Forward bell notifications"
+        }
+      },
+      "forwarding": {
+        "title": "Forward to mobile devices",
+        "description": "Select known installed integrations or observed IDs. Discovery works even while forwarding is disabled. Reopen this page after a new notification. Observed IDs do not necessarily identify an integration. Explicitly select All bell notifications to forward everything.",
+        "data": {
+          "forward_enabled": "Enable forwarding",
+          "forward_targets": "Mobile destinations",
+          "forward_id_patterns": "Additional ID filters (advanced)",
+          "forward_text": "Title or message contains",
+          "forward_updates": "Forward updates too",
+          "forward_sources": "Integrations and notifications to forward"
+        },
+        "data_description": {
+          "forward_id_patterns": "Manual filters add notifications to the selected sources. No sources and no filters means no forwarding. The text filter must also match."
+        }
       }
     },
     "error": {
@@ -81,7 +111,13 @@
       "fallback_service_required": "You must specify a notify service when 'Forward to another service' is selected.",
       "no_persons": "At least one person must have a notify service assigned.",
       "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
-      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram)."
+      "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Select at least one source or enter an ID filter.",
+      "invalid_sources": "Select valid sources (at most 200)."
     }
   },
   "entity": {
@@ -99,6 +135,14 @@
       },
       "last_sent": {
         "name": "Last Sent"
+      },
+      "delivery_status": {
+        "name": "Delivery status"
+      }
+    },
+    "switch": {
+      "forward_notifications": {
+        "name": "Forward bell notifications"
       }
     }
   },

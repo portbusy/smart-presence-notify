@@ -10,7 +10,8 @@
           "queue_mode": "Cuando alguien llega a casa, ¿qué mensajes retenidos enviar?",
           "queue_timeout_minutes": "Retener mensajes hasta (minutos, 0 = indefinidamente)",
           "fallback_mode": "¿Qué hacer con los mensajes expirados?",
-          "fallback_service": "Reenviar mensajes expirados a este servicio"
+          "fallback_service": "Reenviar mensajes expirados a este servicio",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "El nombre que aparece en la página Dispositivos y Servicios de Home Assistant.",
@@ -37,7 +38,13 @@
       "fallback_service_required": "Debes especificar un servicio de notificación cuando se selecciona 'Reenviar a otro servicio'.",
       "no_persons": "Al menos una persona debe tener un servicio de notificación asignado.",
       "admin_required": "Debes seleccionar un administrador cuando el modo 'Solo el administrador' está activo.",
-      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram)."
+      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Selecciona una fuente o introduce un filtro de ID.",
+      "invalid_sources": "Selecciona fuentes válidas (máximo 200)."
     },
     "abort": {
       "already_configured": "Smart Presence Notify ya está configurado. Usa el botón Configurar para cambiar los ajustes."
@@ -54,7 +61,8 @@
           "queue_mode": "Cuando alguien llega a casa, ¿qué mensajes retenidos enviar?",
           "queue_timeout_minutes": "Retener mensajes hasta (minutos, 0 = indefinidamente)",
           "fallback_mode": "¿Qué hacer con los mensajes expirados?",
-          "fallback_service": "Reenviar mensajes expirados a este servicio"
+          "fallback_service": "Reenviar mensajes expirados a este servicio",
+          "queue_limit": "Maximum queued notifications"
         },
         "data_description": {
           "name": "El nombre que aparece en la página Dispositivos y Servicios de Home Assistant.",
@@ -74,6 +82,28 @@
         "data_description": {
           "admin_person": "El miembro del hogar que siempre recibe notificaciones en el modo 'Solo el administrador'. Si esta persona está fuera, el primero en llegar a casa recibirá la notificación."
         }
+      },
+      "init": {
+        "title": "Configure Smart Presence Notify",
+        "menu_options": {
+          "user": "Presence and queue",
+          "forwarding": "Forward bell notifications"
+        }
+      },
+      "forwarding": {
+        "title": "Forward to mobile devices",
+        "description": "Selecciona integraciones instaladas conocidas o IDs observados. La detección funciona incluso con el reenvío desactivado. Reabre esta página tras una nueva notificación. Los IDs observados no identifican necesariamente una integración. Selecciona explícitamente todas las notificaciones para reenviarlo todo.",
+        "data": {
+          "forward_enabled": "Enable forwarding",
+          "forward_targets": "Mobile destinations",
+          "forward_id_patterns": "Filtros de ID adicionales (avanzado)",
+          "forward_text": "Title or message contains",
+          "forward_updates": "Forward updates too",
+          "forward_sources": "Integraciones y notificaciones a reenviar"
+        },
+        "data_description": {
+          "forward_id_patterns": "Los filtros manuales añaden notificaciones a las fuentes seleccionadas. Sin fuentes ni filtros no se reenvía nada. El filtro de texto también debe coincidir."
+        }
       }
     },
     "error": {
@@ -81,7 +111,13 @@
       "fallback_service_required": "Debes especificar un servicio de notificación cuando se selecciona 'Reenviar a otro servicio'.",
       "no_persons": "Al menos una persona debe tener un servicio de notificación asignado.",
       "admin_required": "Debes seleccionar un administrador cuando el modo 'Solo el administrador' está activo.",
-      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram)."
+      "invalid_service_format": "Cada servicio de notificación debe tener el formato 'dominio.servicio' (p. ej. notify.telegram).",
+      "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
+      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "mobile_targets_required": "Select at least one mobile destination.",
+      "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
+      "sources_required": "Selecciona una fuente o introduce un filtro de ID.",
+      "invalid_sources": "Selecciona fuentes válidas (máximo 200)."
     }
   },
   "entity": {
@@ -99,6 +135,14 @@
       },
       "last_sent": {
         "name": "Último enviado"
+      },
+      "delivery_status": {
+        "name": "Delivery status"
+      }
+    },
+    "switch": {
+      "forward_notifications": {
+        "name": "Forward bell notifications"
       }
     }
   },

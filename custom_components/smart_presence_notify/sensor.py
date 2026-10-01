@@ -1,4 +1,5 @@
 """Sensor entities for Smart Presence Notify."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,15 +12,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_DELIVERY_ATTEMPTS, QUEUE_PREVIEW_LIMIT
 from .coordinator import SmartPresenceNotifyCoordinator
-from .models import CoordinatorData, SNPRuntimeData
+from .models import CoordinatorData
+from .runtime import SNPRuntimeData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -29,6 +32,23 @@ class SNPSensorDescription(SensorEntityDescription):
 
 
 SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
+    SNPSensorDescription(
+        key="delivery_status",
+        translation_key="delivery_status",
+        icon="mdi:bell-alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            "failed"
+            if any(n.attempts >= MAX_DELIVERY_ATTEMPTS for n in data.queue)
+            else "retrying"
+            if any(n.attempts for n in data.queue)
+            else "ready"
+        ),
+        extra_fn=lambda data: {
+            "last_error": data.last_error,
+            "failed_recipients": data.failed_recipients,
+        },
+    ),
     SNPSensorDescription(
         key="home_persons",
         translation_key="home_persons",
@@ -49,12 +69,16 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
             "queue": [
                 {
                     "id": n.id,
-                    "title": n.title,
+                    "title": n.title[:255],
+                    "pending_targets": n.targets,
+                    "attempts": n.attempts,
+                    "retry_at": n.retry_at.isoformat() if n.retry_at else None,
                     "priority": n.priority,
                     "expires_at": n.expires_at.isoformat() if n.expires_at else None,
                 }
-                for n in data.queue
-            ]
+                for n in data.queue[:QUEUE_PREVIEW_LIMIT]
+            ],
+            "preview_truncated": len(data.queue) > QUEUE_PREVIEW_LIMIT,
         },
     ),
     SNPSensorDescription(
@@ -62,7 +86,7 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
         translation_key="last_sent",
         icon="mdi:bell-check",
         state_class=None,
-        value_fn=lambda data: data.last_sent.title if data.last_sent else None,
+        value_fn=lambda data: data.last_sent.title[:255] if data.last_sent else None,
         extra_fn=lambda data: (
             {
                 "sent_at": data.last_sent.sent_at.isoformat(),
