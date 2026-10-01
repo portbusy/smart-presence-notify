@@ -62,7 +62,7 @@ class ForwardingSwitch(CoordinatorEntity, SwitchEntity):
                     "Select at least one notification source in integration options"
                 )
             for target in targets:
-                mobile_target(target)
+                mobile_target(target, self.hass)
         except vol.Invalid as err:
             raise ServiceValidationError(str(err)) from err
         self._set_enabled(True)

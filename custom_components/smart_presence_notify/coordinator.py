@@ -52,6 +52,7 @@ from .const import (
     QueueMode,
     TargetMode,
 )
+from .mobile import UnsupportedNotificationDestination, resolve_destination
 from .models import (
     CoordinatorData,
     NotificationRecord,
@@ -342,7 +343,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self, service_full: str, title: str, message: str, extra: dict[str, Any]
     ) -> None:
         try:
-            target = notification_target(service_full)
+            target = notification_target(service_full, self.hass)
         except vol.Invalid as err:
             raise ServiceValidationError(str(err)) from err
         domain, service = target.split(".", 1)
@@ -351,6 +352,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             and not self.hass.services.has_service(domain, service)
             and self.hass.states.get(target) is not None
         ):
+            if extra:
+                raise UnsupportedNotificationDestination(
+                    f"{target} accepts only title/message; choose a compatible notify service for advanced/live data"
+                )
             await self.hass.services.async_call(
                 "notify",
                 "send_message",
@@ -368,6 +373,33 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if extra:
             data["data"] = extra
         await self.hass.services.async_call(domain, service, data, blocking=True)
+
+    def _resolve_delivery(self, target, extra, priority, plain_bell):
+        """Choose the channel using the payload and preserve requested features."""
+        try:
+            actual = resolve_destination(
+                self.hass, target, bool(extra) or priority == Priority.HIGH
+            )
+        except UnsupportedNotificationDestination:
+            if not plain_bell or set(extra) != {"tag"}:
+                raise
+            actual = resolve_destination(self.hass, target, False)
+            extra = {}
+        if plain_bell and set(extra) == {"tag"}:
+            if (
+                actual.startswith("notify.")
+                and not self.hass.services.has_service(*actual.split(".", 1))
+                and self.hass.states.get(actual) is not None
+            ):
+                # Bell replacement tags are optional on modern-only phones.
+                extra = {}
+        if extra.get("live_update") is True and not actual.startswith(
+            "notify.mobile_app_"
+        ):
+            raise UnsupportedNotificationDestination(
+                f"{target} cannot receive Companion Live Activities; choose a Companion phone"
+            )
+        return actual, self._delivery_data(extra, actual, priority)
 
     @staticmethod
     def _has_response_actions(extra: dict[str, Any]) -> bool:
@@ -516,13 +548,29 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._refresh_presence()
         try:
             priority = Priority(priority)
-            override = notification_target(target_override) if target_override else None
+            override = (
+                notification_target(target_override, self.hass)
+                if target_override
+                else None
+            )
             requested = (
-                list(dict.fromkeys(notification_target(target) for target in targets))
+                list(
+                    dict.fromkeys(
+                        notification_target(target, self.hass) for target in targets
+                    )
+                )
                 if targets
                 else None
             )
             _validate_json(extra_data or {})
+            if extra_data and extra_data.get("live_update") is True:
+                tag = extra_data.get("tag")
+                if not isinstance(tag, str) or not re.fullmatch(
+                    r"[A-Za-z0-9_-]{1,64}", tag
+                ):
+                    raise vol.Invalid(
+                        "Live Activities require a stable tag of 1–64 letters, digits, hyphens or underscores"
+                    )
         except (ValueError, vol.Invalid) as err:
             raise ServiceValidationError(str(err)) from err
         mode = self.config_entry.data.get(CONF_TARGET_MODE, TargetMode.BROADCAST)
@@ -544,7 +592,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         ):
             fallback = self.config_entry.data.get(CONF_FALLBACK_SERVICE)
             if fallback:
-                recipients, requires_presence = [notification_target(fallback)], False
+                recipients, requires_presence = (
+                    [notification_target(fallback, self.hass)],
+                    False,
+                )
         extra = self._with_response_preset(extra_data, response_preset, response_id)
         try:
             item = await self._enqueue(
@@ -586,6 +637,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             extra,
             targets=targets,
             requires_presence=False,
+            is_bell_forward=True,
         )
         await self._process_one(item.id)
 
@@ -598,6 +650,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         *,
         targets: list[str] | None = None,
         requires_presence: bool = True,
+        is_bell_forward: bool = False,
     ) -> PendingNotification:
         if self._stopped:
             raise ServiceValidationError("The notification integration is unloading")
@@ -631,6 +684,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             deepcopy(extra),
             targets=targets,
             requires_presence=requires_presence,
+            is_bell_forward=is_bell_forward,
         )
         self.async_set_updated_data(replace(self.data, queue=self.data.queue + [item]))
         await self._persist()
@@ -693,25 +747,31 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             if any(item.priority == Priority.HIGH for item in items)
             else Priority.NORMAL
         )
+        delivered_channels = set()
         for target in recipients:
             if self._stopped:
                 return
             try:
+                actual, payload = self._resolve_delivery(
+                    target, extra, priority, all(item.is_bell_forward for item in items)
+                )
                 async with asyncio.timeout(SERVICE_TIMEOUT_SECONDS):
-                    await self._async_call_service(
-                        target,
-                        title,
-                        message,
-                        self._delivery_data(extra, target, priority),
-                    )
+                    if actual not in delivered_channels:
+                        await self._async_call_service(actual, title, message, payload)
+                        delivered_channels.add(actual)
             except Exception as err:
                 failed.append(target)
+                detail = (
+                    str(err)
+                    if isinstance(err, UnsupportedNotificationDestination)
+                    else type(err).__name__
+                )
                 self._set_error(
-                    f"Delivery to {target} failed ({type(err).__name__})", failed.copy()
+                    f"Delivery to {target} failed ({detail})", failed.copy()
                 )
                 continue
             successful.append(target)
-            self._activate_response(extra, target)
+            self._activate_response(extra, actual)
             for original in items:
                 current = self._find(original.id)
                 if current and target in (current.targets or []):
@@ -841,7 +901,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             await self._persist()
             return
         try:
-            fallback = notification_target(fallback)
+            fallback = notification_target(fallback, self.hass)
         except vol.Invalid as err:
             self._set_error(f"Invalid fallback destination: {err}", [fallback])
             return

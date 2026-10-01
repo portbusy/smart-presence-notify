@@ -26,6 +26,7 @@ class PendingNotification:
     expired: bool = False
     attempts: int = 0
     retry_at: datetime | None = None
+    is_bell_forward: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -42,6 +43,7 @@ class PendingNotification:
             "expired": self.expired,
             "attempts": self.attempts,
             "retry_at": self.retry_at.isoformat() if self.retry_at else None,
+            "is_bell_forward": self.is_bell_forward,
         }
 
     @classmethod
@@ -60,7 +62,7 @@ class PendingNotification:
         attempts = data.get("attempts", 0)
         if type(attempts) is not int or attempts < 0:
             raise ValueError("Invalid delivery attempt count")
-        for key in ("requires_presence", "expired"):
+        for key in ("requires_presence", "expired", "is_bell_forward"):
             if key in data and not isinstance(data[key], bool):
                 raise ValueError(f"Invalid notification {key}")
         return cls(
@@ -77,6 +79,7 @@ class PendingNotification:
             expired=data.get("expired", False),
             attempts=attempts,
             retry_at=_date(data["retry_at"]) if data.get("retry_at") else None,
+            is_bell_forward=data.get("is_bell_forward", False),
         )
 
 

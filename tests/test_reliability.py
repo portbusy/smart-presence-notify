@@ -168,6 +168,7 @@ async def test_bridge_filters_updates_and_dismissals(hass):
 
 
 async def test_options_factory_and_mobile_settings(hass):
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
     coord = await make_coordinator(hass)
     result = await hass.config_entries.options.async_init(coord.config_entry.entry_id)
     assert result["type"] == "menu"

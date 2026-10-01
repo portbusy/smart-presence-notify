@@ -6,7 +6,7 @@ from enum import StrEnum
 from homeassistant.const import Platform
 
 DOMAIN = "smart_presence_notify"
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.NOTIFY]
 
 EVENT_MOBILE_APP_NOTIFICATION_ACTION = "mobile_app_notification_action"
 EVENT_RESPONSE = f"{DOMAIN}_response"
