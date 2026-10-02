@@ -32,9 +32,11 @@ class ForwardingHost(Protocol):
     config_entry: ConfigEntry
     notification_sources: NotificationSources
 
-    def _start_task(self, coroutine: Coroutine[Any, Any, Any]) -> None: ...
+    def _start_task(self, coroutine: Coroutine[Any, Any, Any]) -> None:
+        pass
 
-    def _set_error(self, message: str, recipients: list[str]) -> None: ...
+    def _set_error(self, message: str, recipients: list[str]) -> None:
+        pass
 
     async def async_forward_notification(
         self, title: str, message: str, targets: list[str], extra: dict[str, Any]
