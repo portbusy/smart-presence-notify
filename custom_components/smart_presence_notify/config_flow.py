@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
 from .const import (
@@ -35,13 +36,14 @@ from .const import (
     QueueMode,
     TargetMode,
 )
+from .mobile import mobile_options, mobile_targets
 from .sources import (
     MAX_OBSERVED_SOURCES,
     NotificationSources,
     forwarding_defaults,
     notification_source,
 )
-from .validation import mobile_target, notification_target
+from .validation import notification_target
 
 
 def _notify_options(hass):
@@ -51,7 +53,12 @@ def _notify_options(hass):
             for name in hass.services.async_services_for_domain("notify")
             if name != "send_message"
         }
-        | set(hass.states.async_entity_ids("notify"))
+        | {
+            entity_id
+            for entity_id in hass.states.async_entity_ids("notify")
+            if (entity := er.async_get(hass).async_get(entity_id)) is None
+            or entity.platform != DOMAIN
+        }
     )
 
 
@@ -315,11 +322,8 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
         errors = {}
         if user_input is not None:
             try:
-                user_input[CONF_FORWARD_TARGETS] = list(
-                    dict.fromkeys(
-                        mobile_target(t)
-                        for t in user_input.get(CONF_FORWARD_TARGETS, [])
-                    )
+                user_input[CONF_FORWARD_TARGETS] = mobile_targets(
+                    self.hass, user_input.get(CONF_FORWARD_TARGETS, [])
                 )
             except vol.Invalid:
                 errors[CONF_FORWARD_TARGETS] = "invalid_mobile_target"
@@ -355,6 +359,11 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data={})
         d = user_input or self.config_entry.data
+        destinations = d.get(CONF_FORWARD_TARGETS, [])
+        try:
+            destinations = mobile_targets(self.hass, destinations)
+        except vol.Invalid:
+            pass  # Keep invalid saved choices visible so they can be repaired.
         selected, patterns = forwarding_defaults(self.hass, d)
         runtime = getattr(self.config_entry, "runtime_data", None)
         if runtime is not None:
@@ -368,16 +377,12 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
                     CONF_FORWARD_ENABLED, default=d.get(CONF_FORWARD_ENABLED, False)
                 ): bool,
                 vol.Required(
-                    CONF_FORWARD_TARGETS, default=d.get(CONF_FORWARD_TARGETS, [])
+                    CONF_FORWARD_TARGETS, default=destinations
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=[
-                            t
-                            for t in _notify_options(self.hass)
-                            if t.startswith("notify.mobile_app_")
-                        ],
+                        options=mobile_options(self.hass, destinations),
                         multiple=True,
-                        custom_value=True,
+                        custom_value=False,
                     )
                 ),
                 vol.Required(

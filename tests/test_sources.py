@@ -164,6 +164,7 @@ async def forwarding_form(hass, entry):
 async def test_options_show_runtime_observations_and_save_multiple_selection(
     hass, mock_config_entry
 ):
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
     dreame = MockConfigEntry(domain="dreame_vacuum")
     dreame.add_to_hass(hass)
     mock_config_entry.add_to_hass(hass)
@@ -199,6 +200,7 @@ async def test_options_show_runtime_observations_and_save_multiple_selection(
 
 
 async def test_no_selection_cannot_enable_all_implicitly(hass, mock_config_entry):
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     form = await forwarding_form(hass, mock_config_entry)

@@ -40,7 +40,7 @@
       "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
       "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram).",
       "invalid_queue_limit": "Usa un limite tra 1 e 1000.",
-      "invalid_mobile_target": "Usa servizi notify.mobile_app_…",
+      "invalid_mobile_target": "Scegli un’entità notify dell’app Companion o un servizio notify.mobile_app_…",
       "mobile_targets_required": "Seleziona almeno un dispositivo mobile.",
       "invalid_patterns": "Usa al massimo 20 filtri ID, lunghi fino a 200 caratteri.",
       "sources_required": "Seleziona almeno una sorgente o inserisci un filtro ID.",
@@ -92,7 +92,7 @@
       },
       "forwarding": {
         "title": "Inoltro ai dispositivi mobili",
-        "description": "Seleziona le integrazioni conosciute installate o gli ID osservati. Il rilevamento funziona anche a inoltro disattivato: riapri questa schermata dopo una nuova notifica. Gli ID osservati non indicano necessariamente un’integrazione. Per inoltrare tutto, seleziona esplicitamente Tutte le notifiche della campanella.",
+        "description": "Scegli i telefoni destinatari: il canale di invio viene selezionato automaticamente. Seleziona le integrazioni conosciute installate o gli ID osservati. Il rilevamento funziona anche a inoltro disattivato: riapri questa schermata dopo una nuova notifica. Gli ID osservati non indicano necessariamente un’integrazione. Per inoltrare tutto, seleziona esplicitamente Tutte le notifiche della campanella.",
         "data": {
           "forward_enabled": "Abilita inoltro",
           "forward_targets": "Dispositivi mobili destinatari",
@@ -113,7 +113,7 @@
       "admin_required": "Devi selezionare una persona admin quando è attiva la modalità 'Solo la persona admin'.",
       "invalid_service_format": "Ogni servizio notify deve essere nel formato 'dominio.servizio' (es. notify.telegram).",
       "invalid_queue_limit": "Usa un limite tra 1 e 1000.",
-      "invalid_mobile_target": "Usa servizi notify.mobile_app_…",
+      "invalid_mobile_target": "Scegli un’entità notify dell’app Companion o un servizio notify.mobile_app_…",
       "mobile_targets_required": "Seleziona almeno un dispositivo mobile.",
       "invalid_patterns": "Usa al massimo 20 filtri ID, lunghi fino a 200 caratteri.",
       "sources_required": "Seleziona almeno una sorgente o inserisci un filtro ID.",

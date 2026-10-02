@@ -40,7 +40,7 @@
       "admin_required": "Du musst einen Administrator auswählen, wenn der Modus 'Nur Administrator' aktiv ist.",
       "invalid_service_format": "Jeder Benachrichtigungsdienst muss im Format 'domain.dienst' angegeben werden (z. B. notify.telegram).",
       "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
-      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "invalid_mobile_target": "Choose a Companion App notify entity or notify.mobile_app_… service.",
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Wähle eine Quelle oder gib einen ID-Filter ein.",
@@ -92,7 +92,7 @@
       },
       "forwarding": {
         "title": "Forward to mobile devices",
-        "description": "Wähle bekannte installierte Integrationen oder beobachtete IDs. Die Erkennung funktioniert auch ohne Weiterleitung. Öffne diese Seite nach einer neuen Benachrichtigung erneut. Beobachtete IDs kennzeichnen nicht unbedingt eine Integration. Wähle ausdrücklich alle Benachrichtigungen, um alles weiterzuleiten.",
+        "description": "Choose recipient phones: the delivery channel is selected automatically. Wähle bekannte installierte Integrationen oder beobachtete IDs. Die Erkennung funktioniert auch ohne Weiterleitung. Öffne diese Seite nach einer neuen Benachrichtigung erneut. Beobachtete IDs kennzeichnen nicht unbedingt eine Integration. Wähle ausdrücklich alle Benachrichtigungen, um alles weiterzuleiten.",
         "data": {
           "forward_enabled": "Enable forwarding",
           "forward_targets": "Mobile destinations",
@@ -113,7 +113,7 @@
       "admin_required": "Du musst einen Administrator auswählen, wenn der Modus 'Nur Administrator' aktiv ist.",
       "invalid_service_format": "Jeder Benachrichtigungsdienst muss im Format 'domain.dienst' angegeben werden (z. B. notify.telegram).",
       "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
-      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "invalid_mobile_target": "Choose a Companion App notify entity or notify.mobile_app_… service.",
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Wähle eine Quelle oder gib einen ID-Filter ein.",

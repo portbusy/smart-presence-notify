@@ -21,8 +21,8 @@ from .const import (
     CONF_FORWARD_TEXT,
     CONF_FORWARD_UPDATES,
 )
+from .mobile import mobile_targets
 from .sources import NotificationSources
-from .validation import mobile_target
 
 
 class ForwardingHost(Protocol):
@@ -71,10 +71,8 @@ class NotificationForwarder:
         if not settings.get(CONF_FORWARD_ENABLED, False):
             return
         try:
-            targets = list(
-                dict.fromkeys(
-                    mobile_target(t) for t in settings.get(CONF_FORWARD_TARGETS, [])
-                )
+            targets = mobile_targets(
+                self.coordinator.hass, settings.get(CONF_FORWARD_TARGETS, [])
             )
         except vol.Invalid:
             self.coordinator._set_error(

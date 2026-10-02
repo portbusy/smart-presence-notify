@@ -40,7 +40,7 @@
       "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
       "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram).",
       "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
-      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "invalid_mobile_target": "Choose a Companion App notify entity or notify.mobile_app_… service.",
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Select at least one source or enter an ID filter.",
@@ -92,7 +92,7 @@
       },
       "forwarding": {
         "title": "Forward to mobile devices",
-        "description": "Select known installed integrations or observed IDs. Discovery works even while forwarding is disabled. Reopen this page after a new notification. Observed IDs do not necessarily identify an integration. Explicitly select All bell notifications to forward everything.",
+        "description": "Choose recipient phones: the delivery channel is selected automatically. Select known installed integrations or observed IDs. Discovery works even while forwarding is disabled. Reopen this page after a new notification. Observed IDs do not necessarily identify an integration. Explicitly select All bell notifications to forward everything.",
         "data": {
           "forward_enabled": "Enable forwarding",
           "forward_targets": "Mobile destinations",
@@ -113,7 +113,7 @@
       "admin_required": "You must select an admin person when 'Admin person only' mode is active.",
       "invalid_service_format": "Each notify service must be in 'domain.service' format (e.g. notify.telegram).",
       "invalid_queue_limit": "Use a queue limit between 1 and 1000.",
-      "invalid_mobile_target": "Use notify.mobile_app_… services.",
+      "invalid_mobile_target": "Choose a Companion App notify entity or notify.mobile_app_… service.",
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Select at least one source or enter an ID filter.",

@@ -26,19 +26,19 @@ send:
             - high
     target_override:
       name: Target Override
-      description: Send directly to this notify service, bypassing all presence logic. E.g. notify.telegram.
+      description: Send directly to a notify service or entity, bypassing presence. Companion channels are selected automatically from the payload.
       required: false
       selector:
         text:
     targets:
       name: Targets
-      description: List of notify services to use when 'Set by automation / script' mode is active.
+      description: List of notify services or entities to use in caller-defined mode.
       required: false
       selector:
         object:
     data:
       name: Extra Data
-      description: Additional notification data passed to the notify service (e.g. push sound or tag).
+      description: Extra data selects an advanced notification channel. For Companion Live Activities, include live_update true and a stable tag.
       required: false
       selector:
         object:
