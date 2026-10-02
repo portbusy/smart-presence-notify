@@ -129,6 +129,8 @@ during the current Home Assistant runtime is emitted. Restarting Home Assistant
 discards tokens for fully delivered questions, so their old buttons no longer emit responses. Questions still queued restore their tokens and can become answerable again after a mobile delivery succeeds. Replies are accepted only for issued, delivered questions, for 24 hours. Up to 4096 outstanding response tokens are retained; new questions are rejected at that limit rather than evicting duplicate protection.
 Queued actionable notifications retain their buttons; summary queue mode falls
 back to FIFO so individual questions are not collapsed into a summary.
+Other notifications with extra `data` are also delivered individually in summary
+mode, preserving Live Activities, tags, images and custom actions.
 
 ## Forward Home Assistant bell notifications
 
@@ -148,6 +150,12 @@ Only new notifications and, optionally, changed notifications are forwarded. Exi
 An accepted message is persisted before calling a provider. `last_sent` records destinations whose Home Assistant service call completed successfully; this does not confirm receipt on the device. Failed destinations remain queued and are retried after 30, 60, 120 and 240 seconds, for five attempts total. Successful destinations are not repeated during normal retry. The delivery-status sensor shows failures; `smart_presence_notify.retry_pending` restarts the retry budget after you repair a provider. Queued messages also resume after restarting Home Assistant when someone is already home.
 
 A process crash between external delivery and saving its checkpoint can cause a duplicate. This is an at-least-once delivery queue, not a device receipt protocol. Unloading cancels pending timers and active integration delivery tasks.
+
+Unavailable notify entities remain queued for retry. For linked Companion phones,
+plain messages use an available legacy service when the modern entity is
+unavailable. A failed queue save rejects the new message without retaining it or
+replacing existing pending messages. Removing the integration permanently clears
+its stored queue; unloading or restarting preserves it.
 
 The queue holds 100 messages by default (configurable from 1 to 1000). A full queue rejects new messages explicitly. Last-only mode replaces unsent waiting messages with the same destinations, retaining failed/in-flight deliveries. The queue sensor previews at most 20 items, with a truncation indicator. Lowering the limit retains existing messages and blocks new messages until space is available.
 

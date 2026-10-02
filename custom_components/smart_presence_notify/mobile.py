@@ -1,5 +1,6 @@
 """Present Companion phones once and resolve their best forwarding destination."""
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -105,7 +106,9 @@ def resolve_destination(hass: HomeAssistant, target: str, advanced: bool) -> str
     _, _, _, routes = _destinations(hass)
     if route := routes.get(target):
         entity, service = route
-        if not advanced:
+        if not advanced and (
+            service is None or hass.states.get(entity).state != STATE_UNAVAILABLE
+        ):
             return entity
         if service is None:
             raise UnsupportedNotificationDestination(

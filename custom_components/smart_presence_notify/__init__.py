@@ -10,6 +10,7 @@ from .coordinator import SmartPresenceNotifyCoordinator
 from .runtime import SNPRuntimeData
 from .services import async_register_services, unregister_services
 from .sources import NotificationSources
+from .store import SNPStore
 
 type SNPConfigEntry = ConfigEntry[SNPRuntimeData]
 
@@ -45,5 +46,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> bool
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: SNPConfigEntry) -> None:
-    """Remove this entry's discovery catalogue when the integration is deleted."""
+    """Remove persisted messages and discovery when the integration is deleted."""
+    await SNPStore(hass).async_remove()
     await NotificationSources(hass, entry.entry_id).async_remove()

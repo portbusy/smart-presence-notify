@@ -42,3 +42,6 @@ class SNPStore:
 
     async def async_save(self, queue: list[PendingNotification]) -> None:
         await self._store.async_save([n.to_dict() for n in queue])
+
+    async def async_remove(self) -> None:
+        await self._store.async_remove()

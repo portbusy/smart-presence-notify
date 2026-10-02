@@ -21,6 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
     STATE_HOME,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -112,6 +113,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._tasks: set[asyncio.Task[Any]] = set()
         self._item_locks: dict[str, asyncio.Lock] = {}
         self._save_lock = asyncio.Lock()
+        self._enqueue_lock = asyncio.Lock()
         self._response_tokens: dict[str, ResponseToken] = {}
         self._drain_in_progress = False
         self._stopped = False
@@ -268,13 +270,16 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     async def _persist(self) -> None:
         async with self._save_lock:
-            try:
-                await self._store.async_save(self.data.queue)
-            except Exception as err:
-                self._set_error(f"Queue persistence failed: {err}", [])
-                raise HomeAssistantError(
-                    "Unable to persist the notification queue"
-                ) from err
+            await self._save_queue(self.data.queue)
+
+    async def _save_queue(self, queue: list[PendingNotification]) -> None:
+        try:
+            await self._store.async_save(queue)
+        except Exception as err:
+            self._set_error(f"Queue persistence failed: {err}", [])
+            raise HomeAssistantError(
+                "Unable to persist the notification queue"
+            ) from err
 
     def _set_error(self, message: str, recipients: list[str]) -> None:
         _LOGGER.warning("%s", message)
@@ -352,6 +357,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             and not self.hass.services.has_service(domain, service)
             and self.hass.states.get(target) is not None
         ):
+            if self.hass.states.get(target).state == STATE_UNAVAILABLE:
+                raise HomeAssistantError(
+                    f"Notification destination {target} is unavailable"
+                )
             if extra:
                 raise UnsupportedNotificationDestination(
                     f"{target} accepts only title/message; choose a compatible notify service for advanced/live data"
@@ -363,6 +372,11 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 target={"entity_id": target},
                 blocking=True,
             )
+            state = self.hass.states.get(target)
+            if state is None or state.state == STATE_UNAVAILABLE:
+                raise HomeAssistantError(
+                    f"Notification destination {target} is unavailable"
+                )
             return
         data: dict[str, Any] = {"title": title, "message": message}
         extra = deepcopy(extra)
@@ -620,25 +634,27 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             return
         # A new version replaces an older pending forward with the same mobile tag.
         # Wait for any in-flight attempt before removing its durable queue entry.
-        for previous in list(self.data.queue):
-            if (
-                not previous.requires_presence
-                and previous.extra_data.get("tag") == extra.get("tag")
-                and extra.get("tag")
-            ):
-                lock = self._item_locks.setdefault(previous.id, asyncio.Lock())
-                async with lock:
-                    if self._find(previous.id) is not None:
-                        self._remove(previous.id)
-        item = await self._enqueue(
-            title,
-            message,
-            Priority.NORMAL,
-            extra,
-            targets=targets,
-            requires_presence=False,
-            is_bell_forward=True,
-        )
+        async with AsyncExitStack() as stack:
+            replaced_ids = set()
+            for previous in list(self.data.queue):
+                if (
+                    previous.is_bell_forward
+                    and previous.extra_data.get("tag") == extra.get("tag")
+                    and extra.get("tag")
+                ):
+                    lock = self._item_locks.setdefault(previous.id, asyncio.Lock())
+                    await stack.enter_async_context(lock)
+                    replaced_ids.add(previous.id)
+            item = await self._enqueue(
+                title,
+                message,
+                Priority.NORMAL,
+                extra,
+                targets=targets,
+                requires_presence=False,
+                is_bell_forward=True,
+                replaced_ids=replaced_ids,
+            )
         await self._process_one(item.id)
 
     async def _enqueue(
@@ -651,27 +667,10 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         targets: list[str] | None = None,
         requires_presence: bool = True,
         is_bell_forward: bool = False,
+        replaced_ids: set[str] | None = None,
     ) -> PendingNotification:
         if self._stopped:
             raise ServiceValidationError("The notification integration is unloading")
-        limit = int(self.config_entry.data.get(CONF_QUEUE_LIMIT, DEFAULT_QUEUE_LIMIT))
-        if (
-            self.config_entry.data.get(CONF_QUEUE_MODE) == QueueMode.LAST_ONLY
-            and requires_presence
-            and not self.data.someone_home
-        ):
-            for old in list(self.data.queue):
-                lock = self._item_locks.get(old.id)
-                if (
-                    old.attempts == 0
-                    and old.requires_presence
-                    and old.targets == targets
-                    and not (lock and lock.locked())
-                ):
-                    self._remove(old.id)
-        if len(self.data.queue) >= limit:
-            self._set_error("Notification queue is full; new message was rejected", [])
-            raise ServiceValidationError("Notification queue is full")
         minutes = int(self.config_entry.data.get(CONF_QUEUE_TIMEOUT, 0))
         now = _now()
         item = PendingNotification(
@@ -686,8 +685,41 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             requires_presence=requires_presence,
             is_bell_forward=is_bell_forward,
         )
-        self.async_set_updated_data(replace(self.data, queue=self.data.queue + [item]))
-        await self._persist()
+        async with self._enqueue_lock, AsyncExitStack() as stack:
+            removed = set(replaced_ids or ())
+            if (
+                self.config_entry.data.get(CONF_QUEUE_MODE) == QueueMode.LAST_ONLY
+                and requires_presence
+                and not self.data.someone_home
+            ):
+                for old in list(self.data.queue):
+                    lock = self._item_locks.setdefault(old.id, asyncio.Lock())
+                    if (
+                        old.attempts == 0
+                        and old.requires_presence
+                        and old.targets == targets
+                        and not lock.locked()
+                    ):
+                        await stack.enter_async_context(lock)
+                        removed.add(old.id)
+            async with self._save_lock:
+                queue = [old for old in self.data.queue if old.id not in removed]
+                limit = int(
+                    self.config_entry.data.get(CONF_QUEUE_LIMIT, DEFAULT_QUEUE_LIMIT)
+                )
+                if len(queue) >= limit:
+                    self._set_error(
+                        "Notification queue is full; new message was rejected", []
+                    )
+                    raise ServiceValidationError("Notification queue is full")
+                await self._save_queue(queue + [item])
+                # Deliveries can checkpoint while storage is awaiting I/O.
+                # Preserve their current state when publishing the accepted item.
+                for notification_id in removed:
+                    self._remove(notification_id)
+                self.async_set_updated_data(
+                    replace(self.data, queue=self.data.queue + [item])
+                )
         self._schedule_timeout(item)
         return item
 
@@ -849,7 +881,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     and item.targets is None
                     and item.attempts == 0
                     and not item.expired
-                    and not self._has_response_actions(item.extra_data)
+                    and not item.extra_data
                     and (not item.expires_at or item.expires_at > _now())
                 ):
                     item = replace(item, targets=recipients)
