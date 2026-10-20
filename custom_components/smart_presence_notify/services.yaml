@@ -24,6 +24,11 @@ send:
           options:
             - normal
             - high
+    notification_key:
+      name: Notification Key
+      description: Optional stable key for cancellation when a problem is resolved. Use 1–64 letters, digits, hyphens or underscores. Case-sensitive; does not replace earlier messages.
+      selector:
+        text:
     target_override:
       name: Target Override
       description: Send directly to a notify service or entity, bypassing presence. Companion channels are selected automatically from the payload.
@@ -60,3 +65,66 @@ send:
 retry_pending:
   name: Retry Pending Notifications
   description: Restart delivery attempts for pending messages after repairing notification destinations.
+
+pause:
+  name: Pause Notifications
+  description: Hold notifications for a limited time, including bell forwarding and retries. Expiry still applies. High priority follows the configured bypass option. An active provider call can finish.
+  fields:
+    minutes:
+      name: Minutes
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 10080
+          step: 1
+          mode: box
+
+resume:
+  name: Resume Notifications
+  description: End the temporary pause and resume pending deliveries. Configured quiet hours and presence rules still apply.
+
+test_notification:
+  name: Send Test Notification
+  description: Send a test once to configured home recipients, or explicit destinations even while away. Never queues or retries the test. Success means the provider accepted the call; check the device for receipt.
+  fields:
+    targets:
+      name: Destinations
+      description: Optional explicit notify destinations. Required while away or in caller-defined mode. Bypasses presence for this test only.
+      selector:
+        object:
+
+cancel_pending:
+  name: Cancel Queued Notification
+  description: Remove one queued notification by ID, or all pending messages with an exact key. Specify exactly one field. No matching key is a successful no-op. Already delivered notifications cannot be recalled. Fails without deleting any matches if one is being processed.
+  fields:
+    notification_id:
+      name: Notification ID
+      description: Copy the id from the queue attribute of the Queue Count sensor.
+      selector:
+        text:
+    notification_key:
+      name: Notification Key
+      description: The exact case-sensitive key assigned by the sending automation. Cancels all matching pending messages and retries.
+      selector:
+        text:
+
+clear_queue:
+  name: Clear Notification Queue
+  description: Permanently discard all pending notifications and retries. Already delivered notifications cannot be recalled. If any message is being processed, nothing is removed.
+
+send_pending:
+  name: Send Queued Notification Now
+  description: Bypass presence and retry delays for one unexpired message. Quiet hours and pauses still apply. Subsequent retries also bypass presence. Only destinations still pending are contacted.
+  fields:
+    notification_id:
+      name: Notification ID
+      description: Copy the id from the queue attribute of the Queue Count sensor.
+      required: true
+      selector:
+        text:
+    targets:
+      name: Destinations
+      description: Only for messages without assigned destinations. Required if nobody is home; otherwise the configured home recipients are used.
+      selector:
+        object:

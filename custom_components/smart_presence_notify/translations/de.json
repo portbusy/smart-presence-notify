@@ -87,7 +87,8 @@
         "title": "Configure Smart Presence Notify",
         "menu_options": {
           "user": "Presence and queue",
-          "forwarding": "Forward bell notifications"
+          "forwarding": "Forward bell notifications",
+          "quiet_hours": "Ruhezeiten und Pausen"
         }
       },
       "forwarding": {
@@ -104,6 +105,16 @@
         "data_description": {
           "forward_id_patterns": "Manuelle Filter ergänzen die ausgewählten Quellen. Ohne Quellen und Filter erfolgt keine Weiterleitung. Der Textfilter muss ebenfalls übereinstimmen."
         }
+      },
+      "quiet_hours": {
+        "title": "Ruhezeiten und Pausen",
+        "description": "Tägliche Zeiten gelten in der Home-Assistant-Zeitzone. Nachrichten warten; Ablaufzeiten bleiben aktiv. Die Ausnahme für hohe Priorität gilt auch für vorübergehende Pausen. Laufende Zustellungen können abgeschlossen werden.",
+        "data": {
+          "quiet_hours_enabled": "Tägliche Ruhezeiten aktivieren",
+          "quiet_hours_start": "Beginn",
+          "quiet_hours_end": "Ende",
+          "high_priority_bypasses_silence": "Hohe Priorität während Ruhezeiten und Pausen zulassen"
+        }
       }
     },
     "error": {
@@ -117,7 +128,8 @@
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Wähle eine Quelle oder gib einen ID-Filter ein.",
-      "invalid_sources": "Wähle gültige Quellen (höchstens 200)."
+      "invalid_sources": "Wähle gültige Quellen (höchstens 200).",
+      "invalid_quiet_hours": "Gültige, unterschiedliche Start- und Endzeiten mit Minutengenauigkeit wählen."
     }
   },
   "entity": {
@@ -137,12 +149,23 @@
         "name": "Zuletzt gesendet"
       },
       "delivery_status": {
-        "name": "Delivery status"
+        "name": "Delivery status",
+        "state": {
+          "ready": "Bereit",
+          "waiting": "Wartend",
+          "retrying": "Erneuter Versuch",
+          "failed": "Fehlgeschlagen"
+        }
       }
     },
     "switch": {
       "forward_notifications": {
         "name": "Forward bell notifications"
+      }
+    },
+    "button": {
+      "test_notification": {
+        "name": "Testbenachrichtigung senden"
       }
     }
   },
