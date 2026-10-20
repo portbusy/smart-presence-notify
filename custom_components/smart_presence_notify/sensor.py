@@ -90,6 +90,8 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
         extra_fn=lambda data: (
             {
                 "sent_at": data.last_sent.sent_at.isoformat(),
+                "title": data.last_sent.title,
+                "message": data.last_sent.message,
                 "recipients": data.last_sent.recipients,
                 "priority": data.last_sent.priority,
             }

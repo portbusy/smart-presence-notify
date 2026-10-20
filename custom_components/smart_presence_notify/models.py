@@ -89,6 +89,7 @@ class NotificationRecord:
     sent_at: datetime
     recipients: list[str]
     priority: Priority
+    message: str = ""
 
 
 @dataclass(frozen=True)

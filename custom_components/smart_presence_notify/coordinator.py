@@ -16,6 +16,7 @@ from functools import wraps
 from typing import Any
 
 import voluptuous as vol
+from homeassistant.components.logbook import async_log_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -25,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -287,15 +289,27 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             replace(self.data, last_error=message[:255], failed_recipients=recipients)
         )
 
-    def _record_sent(self, title: str, recipients: list[str], priority: str) -> None:
+    def _record_sent(
+        self, title: str, message: str, recipients: list[str], priority: str
+    ) -> None:
         if recipients:
             self.async_set_updated_data(
                 replace(
                     self.data,
                     last_sent=NotificationRecord(
-                        title, _now(), recipients, Priority(priority)
+                        title, _now(), recipients, Priority(priority), message
                     ),
                 )
+            )
+            entity_id = er.async_get(self.hass).async_get_entity_id(
+                "sensor", DOMAIN, f"{self.config_entry.entry_id}_last_sent"
+            )
+            async_log_entry(
+                self.hass,
+                self.config_entry.title or "Smart Presence Notify",
+                f"{title} → {', '.join(recipients)}: {message}",
+                domain=DOMAIN,
+                entity_id=entity_id,
             )
 
     def _clear_resolved_error(self) -> None:
@@ -822,7 +836,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     )
             # Checkpoint each successful destination before attempting the next one.
             await self._persist()
-        self._record_sent(title, successful, priority)
+        self._record_sent(title, message, successful, priority)
         for original in items:
             current = self._find(original.id)
             if current is None:
