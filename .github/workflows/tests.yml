@@ -16,8 +16,8 @@ jobs:
             ha-version: "2026.9.4"
             pytest-ha-version: "0.13.367"
           - python-version: "3.14"
-            ha-version: "2026.10.0b0"
-            pytest-ha-version: "0.13.367"
+            ha-version: "2026.10.2"
+            pytest-ha-version: "0.13.372"
 
     steps:
       - uses: actions/checkout@v7
@@ -32,8 +32,8 @@ jobs:
           pip install \
             pytest-homeassistant-custom-component==${{ matrix.pytest-ha-version }} \
             "pytest-asyncio==1.4.0"
-          # The published fixture package currently pins stable HA; exercise beta
-          # with the same fixtures after installing its runtime dependencies.
+          # Exercise the selected patch release with its runtime dependencies,
+          # even when the fixture package pins an earlier patch.
           pip install --upgrade homeassistant==${{ matrix.ha-version }}
 
       - name: Run tests

@@ -309,6 +309,7 @@ async def test_drain_last_only_on_arrival(hass):
     assert coord.data.queue == []
     assert coord.data.last_sent is not None
     assert coord.data.last_sent.title == "Last"
+    assert coord.data.last_sent.message == "B2"
 
 
 async def test_drain_summary_on_arrival(hass):
@@ -334,6 +335,7 @@ async def test_drain_summary_on_arrival(hass):
     assert coord.data.queue == []
     assert coord.data.last_sent is not None
     assert coord.data.last_sent.title == "Missed notifications"
+    assert coord.data.last_sent.message == calls[0].data["message"]
 
 
 async def test_actionable_queue_uses_fifo_in_summary_mode(hass):

@@ -24,6 +24,8 @@ async def make_coordinator(hass, **changes):
 
 
 async def test_failed_destination_does_not_block_or_duplicate_success(hass):
+    events = []
+    hass.bus.async_listen("logbook_entry", events.append)
     hass.states.async_set("person.mario", "home")
     coord = await make_coordinator(
         hass,
@@ -45,10 +47,17 @@ async def test_failed_destination_does_not_block_or_duplicate_success(hass):
     await coord.async_retry_pending()
     assert len(calls) == 2
     assert not coord.data.queue
+    await hass.async_block_till_done()
+    assert [event.data["message"] for event in events] == [
+        "Hello → notify.working: Body",
+        "Hello → notify.missing: Body",
+    ]
     await coord.async_shutdown()
 
 
 async def test_provider_failure_is_retained(hass):
+    events = []
+    hass.bus.async_listen("logbook_entry", events.append)
     coord = await make_coordinator(hass)
 
     async def fail(call):
@@ -62,6 +71,8 @@ async def test_provider_failure_is_retained(hass):
     assert len(coord.data.queue) == 1
     assert coord.data.queue[0].retry_at is not None
     assert coord.data.last_error
+    await hass.async_block_till_done()
+    assert not events
     await coord.async_shutdown()
 
 

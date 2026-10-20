@@ -1,6 +1,9 @@
 {
   "domain": "smart_presence_notify",
   "name": "Smart Presence Notify",
+  "after_dependencies": [
+    "logbook"
+  ],
   "codeowners": [
     "@portbusy"
   ],
@@ -13,5 +16,5 @@
   "issue_tracker": "https://github.com/portbusy/smart-presence-notify/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.6.1"
+  "version": "0.7.0"
 }

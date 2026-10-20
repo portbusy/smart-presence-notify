@@ -176,6 +176,20 @@ High-priority mobile sends default to Android `priority: high`, `ttl: 0`, and iO
 | `sensor.smart_presence_notify_last_sent` | Title of the last sent notification |
 | `binary_sensor.smart_presence_notify_someone_home` | Whether anyone is currently home |
 
+Every successful delivery attempt also appears in Home Assistant **Activity**
+(Logbook), associated with the last-sent sensor. Each entry contains the full
+title, recipient destination(s), and message text. Select that sensor in Activity
+or use a Logbook dashboard card to browse deliveries, including repeated titles.
+For partial failures, only successful destinations appear; a successful retry
+creates a separate entry for the recovered destinations. Summary deliveries show
+the actual summary text sent.
+
+The last-sent sensor exposes `title`, `message`, `recipients`, `sent_at`, and
+`priority` as attributes. Activity history requires Logbook/Recorder to be enabled
+and follows their retention and exclusion settings. Message text is stored in
+Home Assistant's database; older deliveries cannot be backfilled. Successful
+delivery means the provider call completed, not confirmation that a device read it.
+
 ## License
 
 MIT
