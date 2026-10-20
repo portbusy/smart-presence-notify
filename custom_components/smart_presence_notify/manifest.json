@@ -1,6 +1,9 @@
 {
   "domain": "smart_presence_notify",
   "name": "Smart Presence Notify",
+  "after_dependencies": [
+    "logbook"
+  ],
   "codeowners": [
     "@portbusy"
   ],
