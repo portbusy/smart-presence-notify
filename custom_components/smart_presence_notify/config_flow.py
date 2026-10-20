@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ADMIN_PERSON,
@@ -250,7 +251,34 @@ class SNPOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        return self.async_show_menu(step_id="init", menu_options=["user", "forwarding"])
+        return self.async_show_menu(step_id="init", menu_options=["user", "forwarding", "quiet_hours"])
+
+    async def async_step_quiet_hours(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        errors = {}
+        if user_input is not None:
+            start = dt_util.parse_time(user_input.get("quiet_hours_start", ""))
+            end = dt_util.parse_time(user_input.get("quiet_hours_end", ""))
+            if not start or not end or start.second or end.second or start.microsecond or end.microsecond or (
+                user_input.get("quiet_hours_enabled") and start == end
+            ):
+                errors["base"] = "invalid_quiet_hours"
+            else:
+                self.hass.config_entries.async_update_entry(self.config_entry, data={
+                    **self.config_entry.data,
+                    **user_input,
+                    "quiet_hours_start": start.isoformat(),
+                    "quiet_hours_end": end.isoformat(),
+                })
+                return self.async_create_entry(title="", data={})
+        settings = user_input or self.config_entry.data
+        return self.async_show_form(step_id="quiet_hours", errors=errors, data_schema=vol.Schema({
+            vol.Required("quiet_hours_enabled", default=settings.get("quiet_hours_enabled", False)): bool,
+            vol.Required("quiet_hours_start", default=settings.get("quiet_hours_start", "22:00:00")): selector.TimeSelector(),
+            vol.Required("quiet_hours_end", default=settings.get("quiet_hours_end", "08:00:00")): selector.TimeSelector(),
+            vol.Required("high_priority_bypasses_silence", default=settings.get("high_priority_bypasses_silence", True)): bool,
+        }))
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

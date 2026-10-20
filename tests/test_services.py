@@ -36,6 +36,7 @@ async def test_service_send_calls_coordinator(
             extra_data=None,
             response_preset=None,
             response_id=None,
+            notification_key=None,
         )
 
 
@@ -85,6 +86,7 @@ async def test_service_send_with_target_override(
             extra_data=None,
             response_preset=None,
             response_id=None,
+            notification_key=None,
         )
 
 
@@ -118,6 +120,7 @@ async def test_service_send_with_yes_no_preset(
             extra_data=None,
             response_preset="yes_no",
             response_id="close_garage",
+            notification_key=None,
         )
 
 

@@ -20,6 +20,7 @@ from homeassistant.components.logbook import async_log_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_HOME,
     STATE_UNAVAILABLE,
@@ -27,7 +28,8 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.event import async_track_point_in_time, async_track_time_change
+from homeassistant.util import dt as dt_util
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -65,7 +67,9 @@ from .models import (
 )
 from .sources import NotificationSources
 from .store import SNPStore
+from .silence import silence_reason
 from .validation import notification_target
+from .validation import notification_key as validate_notification_key
 
 _LOGGER = logging.getLogger(__name__)
 _RESPONSE_ACTION_RE = re.compile(r"SNP_(YES|NO)_([a-f0-9]{32})\.([A-Za-z0-9_-]+)")
@@ -119,12 +123,21 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._response_tokens: dict[str, ResponseToken] = {}
         self._drain_in_progress = False
         self._stopped = False
+        self._pause_unsub: Callable[[], None] | None = None
 
     async def async_initialize(self) -> None:
         queue = await self._store.async_load()
         await self.notification_sources.async_initialize()
         home, persons = self._get_presence()
         self.async_set_updated_data(CoordinatorData(queue, None, home, persons))
+        self._refresh_silence()
+        self._schedule_pause_end()
+        self._unsubs.append(async_track_time_change(
+            self.hass, self._handle_silence_tick, minute="*", second=0
+        ))
+        self._unsubs.append(self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._handle_stop
+        ))
         for item in queue:
             self._restore_response_token(item.extra_data)
         self._register_presence_listener()
@@ -152,6 +165,9 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def _handle_started(self, event: Event) -> None:
         self._start_task(self._async_reconcile())
 
+    async def _handle_stop(self, event: Event) -> None:
+        await self.async_shutdown()
+
     def _start_task(self, coroutine: Coroutine[Any, Any, Any]) -> None:
         if self._stopped:
             coroutine.close()
@@ -161,7 +177,12 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         task.add_done_callback(self._tasks.discard)
 
     async def async_shutdown(self) -> None:
+        if self._stopped:
+            return
         self._stopped = True
+        if self._pause_unsub:
+            self._pause_unsub()
+            self._pause_unsub = None
         if self._presence_unsub:
             self._presence_unsub()
             self._presence_unsub = None
@@ -199,7 +220,65 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def async_reload_presence_listener(self) -> None:
         self._register_presence_listener()
         self._refresh_presence()
+        self._refresh_silence()
+        self._schedule_pause_end()
         self._start_task(self._async_reconcile())
+
+    def _refresh_silence(self) -> None:
+        reason = silence_reason(self.config_entry.data, _now())
+        bypass = self.config_entry.data.get("high_priority_bypasses_silence", True)
+        if (reason, bypass) != (self.data.silence_reason, self.data.high_priority_bypasses_silence):
+            self.async_set_updated_data(replace(
+                self.data, silence_reason=reason, high_priority_bypasses_silence=bypass
+            ))
+
+    def _silenced(self, item: PendingNotification) -> bool:
+        return bool(silence_reason(self.config_entry.data, _now())) and not (
+            item.priority == Priority.HIGH
+            and self.config_entry.data.get("high_priority_bypasses_silence", True)
+        )
+
+    @callback
+    def _handle_silence_tick(self, now: datetime) -> None:
+        if self._stopped:
+            return
+        previous = self.data.silence_reason
+        self._refresh_silence()
+        if previous != self.data.silence_reason:
+            self._start_task(self._async_reconcile())
+
+    def _schedule_pause_end(self) -> None:
+        if self._pause_unsub:
+            self._pause_unsub()
+            self._pause_unsub = None
+        until = self.config_entry.data.get("paused_until")
+        parsed = dt_util.parse_datetime(until) if until else None
+        if parsed and parsed.tzinfo and parsed > _now():
+            self._pause_unsub = async_track_point_in_time(
+                self.hass, self._handle_silence_tick, parsed
+            )
+
+    async def async_pause(self, minutes: int) -> None:
+        if self._stopped:
+            raise ServiceValidationError("The notification integration is unloading")
+        if type(minutes) is not int or not 1 <= minutes <= 10080:
+            raise ServiceValidationError("Use a pause between 1 and 10080 minutes")
+        self.hass.config_entries.async_update_entry(self.config_entry, data={
+            **self.config_entry.data,
+            "paused_until": (_now() + timedelta(minutes=minutes)).isoformat(),
+        })
+        self._refresh_silence()
+        self._schedule_pause_end()
+
+    async def async_resume(self) -> None:
+        if self._stopped:
+            raise ServiceValidationError("The notification integration is unloading")
+        self.hass.config_entries.async_update_entry(self.config_entry, data={
+            **self.config_entry.data, "paused_until": None,
+        })
+        self._refresh_silence()
+        self._schedule_pause_end()
+        await self._async_reconcile()
 
     def _get_presence(self) -> tuple[bool, list[str]]:
         persons = [
@@ -234,6 +313,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if self._stopped:
             return
         self._refresh_presence()
+        self._refresh_silence()
         for item in list(self.data.queue):
             self._schedule_timeout(item)
             if item.expired or (item.expires_at and item.expires_at <= _now()):
@@ -570,11 +650,14 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         extra_data: dict[str, Any] | None = None,
         response_preset: str | None = None,
         response_id: str | None = None,
+        notification_key: str | None = None,
     ) -> None:
         if self._stopped:
             raise ServiceValidationError("The notification integration is unloading")
         self._refresh_presence()
         try:
+            if notification_key is not None:
+                notification_key = validate_notification_key(notification_key)
             priority = Priority(priority)
             override = (
                 notification_target(target_override, self.hass)
@@ -633,6 +716,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 extra,
                 targets=recipients,
                 requires_presence=requires_presence,
+                notification_key=notification_key,
             )
         except BaseException:
             self._forget_unsent_response(extra)
@@ -682,6 +766,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         requires_presence: bool = True,
         is_bell_forward: bool = False,
         replaced_ids: set[str] | None = None,
+        notification_key: str | None = None,
     ) -> PendingNotification:
         if self._stopped:
             raise ServiceValidationError("The notification integration is unloading")
@@ -698,6 +783,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             targets=targets,
             requires_presence=requires_presence,
             is_bell_forward=is_bell_forward,
+            notification_key=notification_key,
         )
         async with self._enqueue_lock, AsyncExitStack() as stack:
             removed = set(replaced_ids or ())
@@ -755,6 +841,9 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
             ):
                 self._schedule_timeout(item)
                 return
+            if self._silenced(item):
+                self._schedule_timeout(item)
+                return
             if item.requires_presence and not self.data.someone_home:
                 self._schedule_timeout(item)
                 return
@@ -781,6 +870,12 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         message: str,
         extra: dict[str, Any],
     ) -> None:
+        self._refresh_silence()
+        if any(self._silenced(item) for item in items):
+            await self._persist()
+            for item in items:
+                self._schedule_timeout(item)
+            return
         for item in items:
             self._update(replace(item, attempts=item.attempts + 1, retry_at=None))
         await self._persist()
@@ -896,6 +991,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     and item.attempts == 0
                     and not item.expired
                     and not item.extra_data
+                    and not self._silenced(item)
                     and (not item.expires_at or item.expires_at > _now())
                 ):
                     item = replace(item, targets=recipients)
@@ -918,7 +1014,7 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
         dates = []
         if notification.expires_at and not notification.expired:
             dates.append(notification.expires_at)
-        if notification.retry_at and (
+        if notification.retry_at and not self._silenced(notification) and (
             not notification.requires_presence or self.data.someone_home
         ):
             dates.append(notification.retry_at)
@@ -989,6 +1085,158 @@ class SmartPresenceNotifyCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 await self._expire_locked(item)
 
     @_track_delivery
+    async def async_test_notification(self, targets: list[str] | None = None) -> None:
+        """Test provider calls once, without persisting or changing the real queue."""
+        if self._stopped:
+            raise ServiceValidationError("The notification integration is unloading")
+        self._refresh_presence()
+        if targets is None:
+            if self.config_entry.data.get(CONF_TARGET_MODE) == TargetMode.CALLER_DECIDES:
+                raise ServiceValidationError(
+                    "Caller-defined mode requires explicit targets in the test_notification action"
+                )
+            recipients = self._home_targets(Priority.NORMAL)
+        else:
+            try:
+                recipients = list(dict.fromkeys(notification_target(t, self.hass) for t in targets))
+            except vol.Invalid as err:
+                raise ServiceValidationError(str(err)) from err
+        if not recipients:
+            raise ServiceValidationError(
+                "No home recipients available. Use test_notification with explicit targets to test while away"
+            )
+        italian = self.hass.config.language == "it"
+        title = "Smart Presence Notify — Test"
+        message = (
+            "Notifica di prova. Verifica sul dispositivo di averla ricevuta."
+            if italian else "Test notification. Check your device to confirm receipt."
+        )
+        successful, failed, channels = [], [], set()
+        for target in recipients:
+            try:
+                actual, payload = self._resolve_delivery(target, {}, Priority.NORMAL, False)
+                async with asyncio.timeout(SERVICE_TIMEOUT_SECONDS):
+                    if actual not in channels:
+                        await self._async_call_service(actual, title, message, payload)
+                        channels.add(actual)
+            except Exception:
+                failed.append(target)
+            else:
+                successful.append(target)
+        self.async_set_updated_data(replace(self.data, last_test={
+            "tested_at": _now().isoformat(),
+            "result": "partial" if failed and successful else "failed" if failed else "provider_accepted",
+            "successful_targets": successful,
+            "failed_targets": failed,
+        }))
+        self._record_sent(title, message, successful, Priority.NORMAL)
+        if failed:
+            raise HomeAssistantError(
+                f"Test failed for: {', '.join(failed)}. No test was queued; check notification providers"
+            )
+
+    @_track_delivery
+    async def async_cancel_pending(
+        self, notification_id: str | None = None, *, notification_key: str | None = None
+    ) -> None:
+        """Remove one item, or the whole queue, only after saving successfully."""
+        if self._stopped:
+            raise ServiceValidationError("The notification integration is unloading")
+        if notification_key is not None:
+            if notification_id is not None:
+                raise ServiceValidationError("Choose notification_id or notification_key")
+            try:
+                validate_notification_key(notification_key)
+            except vol.Invalid as err:
+                raise ServiceValidationError(str(err)) from err
+        async with self._enqueue_lock, AsyncExitStack() as stack:
+            items = (
+                [self._find(notification_id)]
+                if notification_id is not None
+                else list(self.data.queue)
+            )
+            if notification_key is not None:
+                items = [
+                    item for item in items if item.notification_key == notification_key
+                ]
+                if not items:
+                    return
+            if any(item is None for item in items):
+                raise ServiceValidationError("Queued notification not found")
+            for item in items:
+                lock = self._item_locks.setdefault(item.id, asyncio.Lock())
+                if lock.locked():
+                    raise ServiceValidationError(
+                        "A selected notification is being processed; try again shortly"
+                    )
+                await stack.enter_async_context(lock)
+            ids = {item.id for item in items}
+            async with self._save_lock:
+                await self._save_queue(
+                    [item for item in self.data.queue if item.id not in ids]
+                )
+                for item in items:
+                    self._remove(item.id)
+            self._clear_resolved_error()
+
+    @_track_delivery
+    async def async_send_pending(
+        self, notification_id: str, targets: list[str] | None = None
+    ) -> None:
+        """Deliver an existing item now, preserving completed destinations."""
+        if self._stopped:
+            raise ServiceValidationError("The notification integration is unloading")
+        lock = self._item_locks.setdefault(notification_id, asyncio.Lock())
+        if lock.locked():
+            raise ServiceValidationError(
+                "The notification is being processed; try again shortly"
+            )
+        async with lock:
+            item = self._find(notification_id)
+            if item is None:
+                self._item_locks.pop(notification_id, None)
+                raise ServiceValidationError("Queued notification not found")
+            if item.expired or (item.expires_at and item.expires_at <= _now()):
+                raise ServiceValidationError("The notification has expired")
+            if self._silenced(item):
+                raise ServiceValidationError("Notifications are silenced; resume or change quiet hours first")
+            if targets is not None and item.targets is not None:
+                raise ServiceValidationError(
+                    "Destinations are already assigned; omit targets to retry only pending destinations"
+                )
+            self._refresh_presence()
+            recipients = item.targets
+            if recipients is None:
+                try:
+                    recipients = (
+                        [notification_target(target, self.hass) for target in targets]
+                        if targets is not None
+                        else self._home_targets(item.priority)
+                    )
+                except vol.Invalid as err:
+                    raise ServiceValidationError(str(err)) from err
+            if not recipients:
+                raise ServiceValidationError(
+                    "No destinations available; specify targets when nobody is home"
+                )
+            updated = replace(
+                item,
+                targets=list(dict.fromkeys(recipients)),
+                requires_presence=False,
+                attempts=0,
+                retry_at=None,
+            )
+            async with self._save_lock:
+                await self._save_queue(
+                    [updated if old.id == item.id else old for old in self.data.queue]
+                )
+                self._update(updated)
+            if unsub := self._timeout_unsubs.pop(item.id, None):
+                unsub()
+            await self._deliver_group_locked(
+                [updated], updated.title, updated.message, updated.extra_data
+            )
+
     async def async_retry_pending(self) -> None:
         for original in list(self.data.queue):
             lock = self._item_locks.setdefault(original.id, asyncio.Lock())

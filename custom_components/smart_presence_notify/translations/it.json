@@ -87,7 +87,8 @@
         "title": "Configura Smart Presence Notify",
         "menu_options": {
           "user": "Presenza e coda",
-          "forwarding": "Inoltro notifiche della campanella"
+          "forwarding": "Inoltro notifiche della campanella",
+          "quiet_hours": "Fasce silenziose e pause"
         }
       },
       "forwarding": {
@@ -104,6 +105,16 @@
         "data_description": {
           "forward_id_patterns": "I filtri manuali aggiungono altre notifiche a quelle selezionate. Nessuna selezione e nessun filtro: nessun inoltro. Il filtro testo deve sempre corrispondere."
         }
+      },
+      "quiet_hours": {
+        "title": "Fasce silenziose e pause",
+        "description": "Le fasce seguono il fuso orario di Home Assistant. I messaggi attendono, ma le scadenze restano attive. La scelta per l’alta priorità vale anche per la pausa temporanea. Le chiamate di invio già in corso possono terminare.",
+        "data": {
+          "quiet_hours_enabled": "Abilita fascia silenziosa giornaliera",
+          "quiet_hours_start": "Inizio",
+          "quiet_hours_end": "Fine",
+          "high_priority_bypasses_silence": "Consenti alta priorità durante silenzio e pause"
+        }
       }
     },
     "error": {
@@ -117,7 +128,8 @@
       "mobile_targets_required": "Seleziona almeno un dispositivo mobile.",
       "invalid_patterns": "Usa al massimo 20 filtri ID, lunghi fino a 200 caratteri.",
       "sources_required": "Seleziona almeno una sorgente o inserisci un filtro ID.",
-      "invalid_sources": "Seleziona sorgenti valide (al massimo 200)."
+      "invalid_sources": "Seleziona sorgenti valide (al massimo 200).",
+      "invalid_quiet_hours": "Scegli orari validi e diversi per inizio e fine."
     }
   },
   "entity": {
@@ -137,12 +149,23 @@
         "name": "Ultimo inviato"
       },
       "delivery_status": {
-        "name": "Stato consegna"
+        "name": "Stato consegna",
+        "state": {
+          "ready": "Pronto",
+          "waiting": "In attesa",
+          "retrying": "Nuovo tentativo",
+          "failed": "Invio fallito"
+        }
       }
     },
     "switch": {
       "forward_notifications": {
         "name": "Inoltra notifiche della campanella"
+      }
+    },
+    "button": {
+      "test_notification": {
+        "name": "Invia notifica di prova"
       }
     }
   },

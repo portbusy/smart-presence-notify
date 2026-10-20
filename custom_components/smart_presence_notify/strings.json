@@ -87,7 +87,8 @@
         "title": "Configure Smart Presence Notify",
         "menu_options": {
           "user": "Presence and queue",
-          "forwarding": "Forward bell notifications"
+          "forwarding": "Forward bell notifications",
+          "quiet_hours": "Quiet hours and pauses"
         }
       },
       "forwarding": {
@@ -104,6 +105,16 @@
         "data_description": {
           "forward_id_patterns": "Manual filters add notifications to the selected sources. No sources and no filters means no forwarding. The text filter must also match."
         }
+      },
+      "quiet_hours": {
+        "title": "Quiet hours and pauses",
+        "description": "Daily hours use the Home Assistant time zone. Messages wait, but expiry still applies. The high-priority setting also applies to temporary pauses. Provider calls already in progress may finish.",
+        "data": {
+          "quiet_hours_enabled": "Enable daily quiet hours",
+          "quiet_hours_start": "Start",
+          "quiet_hours_end": "End",
+          "high_priority_bypasses_silence": "Allow high priority during quiet hours and pauses"
+        }
       }
     },
     "error": {
@@ -117,7 +128,8 @@
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Select at least one source or enter an ID filter.",
-      "invalid_sources": "Select valid sources (at most 200)."
+      "invalid_sources": "Select valid sources (at most 200).",
+      "invalid_quiet_hours": "Choose valid, different start and end times."
     }
   },
   "entity": {
@@ -137,12 +149,23 @@
         "name": "Last Sent"
       },
       "delivery_status": {
-        "name": "Delivery status"
+        "name": "Delivery status",
+        "state": {
+          "ready": "Ready",
+          "waiting": "Waiting",
+          "retrying": "Retrying",
+          "failed": "Failed"
+        }
       }
     },
     "switch": {
       "forward_notifications": {
         "name": "Forward bell notifications"
+      }
+    },
+    "button": {
+      "test_notification": {
+        "name": "Send test notification"
       }
     }
   },

@@ -13,6 +13,15 @@ from .const import DOMAIN
 _TARGET_RE = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+")
 
 
+def notification_key(value: str) -> str:
+    """Validate an exact, stable key shared by related queued notifications."""
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", value):
+        raise vol.Invalid(
+            "Use 1–64 letters, digits, hyphens or underscores for notification_key"
+        )
+    return value
+
+
 def notification_target(value: str, hass: HomeAssistant | None = None) -> str:
     """Normalize a service or notify entity and reject recursive destinations."""
     if not isinstance(value, str):
