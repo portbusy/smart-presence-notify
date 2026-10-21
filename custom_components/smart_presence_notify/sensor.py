@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -18,11 +19,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MAX_DELIVERY_ATTEMPTS, QUEUE_PREVIEW_LIMIT
 from .coordinator import SmartPresenceNotifyCoordinator
 from .models import CoordinatorData
 from .runtime import SNPRuntimeData
+from .queue_status import explain_queue_item
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,16 +40,22 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
         translation_key="delivery_status",
         icon="mdi:bell-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=["ready", "waiting", "retrying", "failed"],
         value_fn=lambda data: (
             "failed"
             if any(n.attempts >= MAX_DELIVERY_ATTEMPTS for n in data.queue)
             else "retrying"
             if any(n.attempts for n in data.queue)
+            else "waiting"
+            if data.queue
             else "ready"
         ),
         extra_fn=lambda data: {
             "last_error": data.last_error,
             "failed_recipients": data.failed_recipients,
+            "last_test": data.last_test,
+            "silence_reason": data.silence_reason,
         },
     ),
     SNPSensorDescription(
@@ -69,6 +78,7 @@ SENSOR_DESCRIPTIONS: tuple[SNPSensorDescription, ...] = (
             "queue": [
                 {
                     "id": n.id,
+                    "notification_key": n.notification_key,
                     "title": n.title[:255],
                     "pending_targets": n.targets,
                     "attempts": n.attempts,
@@ -143,4 +153,22 @@ class SNPSensorEntity(CoordinatorEntity[SmartPresenceNotifyCoordinator], SensorE
     def extra_state_attributes(self) -> dict[str, Any] | None:
         if self.coordinator.data is None or self.entity_description.extra_fn is None:
             return None
-        return self.entity_description.extra_fn(self.coordinator.data)
+        attributes = self.entity_description.extra_fn(self.coordinator.data)
+        if self.entity_description.key in ("queue_count", "delivery_status"):
+            settings = self.coordinator.config_entry.data
+            attributes.update({
+                "paused_until": settings.get("paused_until"),
+                "quiet_hours_enabled": settings.get("quiet_hours_enabled", False),
+                "quiet_hours_start": settings.get("quiet_hours_start", "22:00:00"),
+                "quiet_hours_end": settings.get("quiet_hours_end", "08:00:00"),
+                "high_priority_bypasses_silence": self.coordinator.data.high_priority_bypasses_silence,
+            })
+        if self.entity_description.key == "queue_count":
+            now = dt_util.utcnow()
+            for preview, item in zip(
+                attributes["queue"], self.coordinator.data.queue[:QUEUE_PREVIEW_LIMIT]
+            ):
+                preview.update(explain_queue_item(
+                    item, self.coordinator.data, now, self.hass.config.language
+                ))
+        return attributes

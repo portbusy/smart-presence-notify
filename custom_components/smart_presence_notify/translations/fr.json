@@ -87,7 +87,8 @@
         "title": "Configure Smart Presence Notify",
         "menu_options": {
           "user": "Presence and queue",
-          "forwarding": "Forward bell notifications"
+          "forwarding": "Forward bell notifications",
+          "quiet_hours": "Heures silencieuses et pauses"
         }
       },
       "forwarding": {
@@ -104,6 +105,16 @@
         "data_description": {
           "forward_id_patterns": "Les filtres manuels ajoutent des notifications aux sources sélectionnées. Sans source ni filtre, rien n’est transféré. Le filtre de texte doit également correspondre."
         }
+      },
+      "quiet_hours": {
+        "title": "Heures silencieuses et pauses",
+        "description": "Les horaires utilisent le fuseau horaire de Home Assistant. Les messages attendent, mais leur expiration reste active. L’exception de priorité haute s’applique aussi aux pauses temporaires. Les envois en cours peuvent se terminer.",
+        "data": {
+          "quiet_hours_enabled": "Activer les heures silencieuses quotidiennes",
+          "quiet_hours_start": "Début",
+          "quiet_hours_end": "Fin",
+          "high_priority_bypasses_silence": "Autoriser la priorité haute pendant le silence et les pauses"
+        }
       }
     },
     "error": {
@@ -117,7 +128,8 @@
       "mobile_targets_required": "Select at least one mobile destination.",
       "invalid_patterns": "Use at most 20 ID patterns, up to 200 characters each.",
       "sources_required": "Sélectionnez une source ou saisissez un filtre d’ID.",
-      "invalid_sources": "Sélectionnez des sources valides (200 maximum)."
+      "invalid_sources": "Sélectionnez des sources valides (200 maximum).",
+      "invalid_quiet_hours": "Choisissez des heures de début et de fin valides, différentes et à la minute près."
     }
   },
   "entity": {
@@ -137,12 +149,23 @@
         "name": "Dernier envoyé"
       },
       "delivery_status": {
-        "name": "Delivery status"
+        "name": "Delivery status",
+        "state": {
+          "ready": "Prêt",
+          "waiting": "En attente",
+          "retrying": "Nouvelle tentative",
+          "failed": "Échec"
+        }
       }
     },
     "switch": {
       "forward_notifications": {
         "name": "Forward bell notifications"
+      }
+    },
+    "button": {
+      "test_notification": {
+        "name": "Envoyer une notification de test"
       }
     }
   },

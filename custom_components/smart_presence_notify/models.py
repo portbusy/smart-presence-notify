@@ -8,7 +8,7 @@ from math import isfinite
 from typing import Any
 
 from .const import Priority
-from .validation import notification_target
+from .validation import notification_key, notification_target
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,7 @@ class PendingNotification:
     attempts: int = 0
     retry_at: datetime | None = None
     is_bell_forward: bool = False
+    notification_key: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -44,6 +45,7 @@ class PendingNotification:
             "attempts": self.attempts,
             "retry_at": self.retry_at.isoformat() if self.retry_at else None,
             "is_bell_forward": self.is_bell_forward,
+            "notification_key": self.notification_key,
         }
 
     @classmethod
@@ -80,6 +82,11 @@ class PendingNotification:
             attempts=attempts,
             retry_at=_date(data["retry_at"]) if data.get("retry_at") else None,
             is_bell_forward=data.get("is_bell_forward", False),
+            notification_key=(
+                notification_key(data["notification_key"])
+                if data.get("notification_key") is not None
+                else None
+            ),
         )
 
 
@@ -100,6 +107,9 @@ class CoordinatorData:
     home_persons: list[str]
     last_error: str | None = None
     failed_recipients: list[str] = field(default_factory=list)
+    last_test: dict[str, Any] | None = None
+    silence_reason: str | None = None
+    high_priority_bypasses_silence: bool = True
 
 
 @dataclass

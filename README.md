@@ -165,13 +165,178 @@ Both legacy notify services and notify entities are supported. Notify entities u
 
 High-priority mobile sends default to Android `priority: high`, `ttl: 0`, and iOS `push.interruption-level: time-sensitive` with default sound. Values supplied in `data` take precedence; device permissions and settings still determine the actual alert.
 
+## Manage queued notifications
+
+### Quiet hours and temporary pauses
+
+Open **Configure → Quiet hours and pauses** to enable a daily interval in the
+Home Assistant time zone (for example 22:00–08:00). Overnight intervals and local
+daylight-saving changes are supported. Start and end must differ and use minute
+precision. The end time is excluded; automatic quiet-hour transitions are checked
+each minute. Quiet hours are disabled by default.
+
+The **Allow high priority during quiet hours and pauses** option is enabled by
+default. Turn it off to hold high-priority messages as well. High-priority routing
+still requires a present recipient or the existing fallback policy.
+
+```yaml
+action: smart_presence_notify.pause
+data:
+  minutes: 60
+```
+
+Pause for 1–10080 minutes (60 by default); a new pause replaces the previous end
+time. The deadline is saved with the integration and survives restarts.
+To end the temporary pause early:
+
+```yaml
+action: smart_presence_notify.resume
+```
+
+Resume keeps daily quiet hours in effect. At the end of the pause or quiet hours,
+pending messages resume according to their presence, queue and retry rules.
+While silenced, ordinary notifications, explicit-target sends, bell forwards,
+fallback deliveries and retries are held without consuming delivery attempts.
+Expiry remains active: an expired message is discarded or converted to a pending
+fallback delivery according to the configured policy. Provider calls already in
+progress can finish; a pause cannot recall pushes already sent.
+
+Manual `send_pending` respects silence and reports an error while its message is
+blocked; diagnostic tests intentionally bypass silence. Queue limits and existing
+replacement rules remain active (last-only replacement applies while nobody is
+home). The queue preview explains `paused` and `quiet_hours` blockers. Delivery
+Status exposes `silence_reason`, `paused_until`, configured daily hours and the
+high-priority bypass setting; `paused_until` may retain a past deadline after a
+pause ends and is not itself proof that notifications are currently paused.
+
+### Test delivery and understand waiting messages
+
+Open the integration's device page and press **Send test notification**.
+It sends once to the configured home recipients using the normal-priority routing
+rules. With nobody home or in caller-defined mode, use the action below with
+explicit destinations instead:
+
+```yaml
+action: smart_presence_notify.test_notification
+data:
+  targets:
+    - notify.mobile_app_my_phone
+```
+
+Explicit test targets bypass presence. Tests never enter the queue, replace
+pending alerts or schedule retries. Failed destinations produce an action error.
+The Delivery Status sensor's `last_test` attribute records the latest attempted
+test during this Home Assistant runtime: time, successful and failed targets,
+and `provider_accepted`, `partial` or `failed`. Validation errors before an attempt
+leave that report unchanged. Successful test calls also appear in Last Sent and
+Activity. Provider acceptance does not confirm receipt: check your device.
+
+Delivery Status now shows **Waiting** when messages are pending without previous
+delivery attempts, **Retrying** after failures, **Failed** when automatic attempts
+are exhausted, and **Ready** when the queue is empty. For the specific blocker,
+inspect each Queue Count preview item's `reason` and `explanation`:
+
+| Reason | Meaning |
+|--------|---------|
+| `waiting_for_presence` | Presence is required and nobody is home. |
+| `paused` | Waiting for resume or the temporary pause deadline. |
+| `quiet_hours` | Waiting for the end of daily quiet hours. |
+| `retry_scheduled` | A retry is scheduled at `retry_at`. |
+| `retries_exhausted` | Repair the provider and retry manually. |
+| `expiry_pending` | Expiry is awaiting discard or fallback handling. |
+| `pending` | Awaiting delivery or currently being processed. |
+
+Explanations use Italian or English according to Home Assistant's language,
+with English as fallback. `requires_presence` shows whether arrival is needed;
+`fallback_delivery` identifies an expired message routed to the fallback.
+The existing `retry_at` and `expires_at` attributes provide exact timestamps.
+The preview remains limited to 20 messages and refreshes with queue/presence
+updates; it is a status snapshot, not a live countdown.
+
+In **Developer Tools → Actions**, use:
+
+- `smart_presence_notify.cancel_pending` with `notification_id` to delete one pending message, or with `notification_key` to delete all pending messages for a resolved issue.
+- `smart_presence_notify.clear_queue` to permanently discard all queued messages and pending retries.
+- `smart_presence_notify.send_pending` with `notification_id` to send an unexpired message immediately, bypassing presence and retry delays.
+
+Find `notification_id` in the `queue` attribute of the Queue Count sensor
+(each item's `id`; the preview shows up to 20 items).
+These actions can also be used in scripts and dashboard buttons.
+
+```yaml
+action: smart_presence_notify.cancel_pending
+data:
+  notification_id: "COPY-QUEUED-MESSAGE-ID"
+```
+
+For immediate sending, existing destinations are preserved: recipients already
+successfully contacted are not notified again. If the message has no assigned
+destinations, the configured home recipients are used; when nobody is home,
+provide an explicit list of `targets`. Targets cannot be changed after assignment.
+
+```yaml
+action: smart_presence_notify.send_pending
+data:
+  notification_id: "COPY-QUEUED-MESSAGE-ID"
+  targets:
+    - notify.mobile_app_my_phone
+```
+
+Immediate sending restarts the retry budget; subsequent retries also bypass
+presence, while the original expiry remains in effect. Expired messages cannot
+be sent manually. Cancellation cannot recall notifications already sent.
+An action fails if the selected message is being processed; clearing the queue
+fails without deleting any messages if any queued message is being processed.
+Deletion is saved before being applied, so a storage failure leaves the queue intact.
+
+### Cancel an alert when its cause is resolved
+
+Assign an optional `notification_key` when sending an alert:
+
+```yaml
+action: smart_presence_notify.send
+data:
+  title: "Garage"
+  message: "The garage door is still open"
+  notification_key: garage_open
+```
+
+In the automation that handles the door closing, cancel using the same key:
+
+```yaml
+action: smart_presence_notify.cancel_pending
+data:
+  notification_key: garage_open
+```
+
+This removes **all still-pending messages and retries** with that exact key.
+The key survives Home Assistant restarts and appears in the queue sensor preview.
+If nothing matches, cancellation succeeds without changes, so it is safe to run
+even when the alert was already delivered or never queued.
+
+Keys are case-sensitive and accept 1–64 letters (A–Z, a–z), digits, hyphens or
+underscores. Choose a distinct key per condition, such as `garage_open` and
+`washing_machine_finished`. Supply exactly one of `notification_id` and
+`notification_key` when cancelling. The key is separate from mobile `data.tag`
+and actionable-notification `response_id`; it does not automatically replace
+earlier messages or change the configured queue mode.
+
+The integration does not monitor the door itself: your automation must call
+cancellation when it closes. Run sends and cancellations for the same condition
+in a single automation with queued execution if they could overlap.
+Cancellation affects messages already queued when it runs, not future sends.
+If a matching message is currently being processed, the action fails without
+removing any matches; retry cancellation after that operation finishes.
+It cannot recall a push already sent to a device.
+
 ## Exposed Entities
 
 | Entity | Description |
 |--------|-------------|
 | `notify.smart_presence_notify` | Standard central notification entry point (one per configuration) |
+| `button.smart_presence_notify_send_test_notification` | Test normal delivery to configured home recipients without queueing |
 | `switch.smart_presence_notify_forward_bell_notifications` | Enable mobile forwarding (requires configured mobile destinations) |
-| `sensor.smart_presence_notify_delivery_status` | Ready, retrying or failed, with provider error details |
+| `sensor.smart_presence_notify_delivery_status` | Ready, waiting, retrying or failed, with provider error details and latest test report |
 | `sensor.smart_presence_notify_queue_count` | Number of pending notifications |
 | `sensor.smart_presence_notify_last_sent` | Title of the last sent notification |
 | `binary_sensor.smart_presence_notify_someone_home` | Whether anyone is currently home |
