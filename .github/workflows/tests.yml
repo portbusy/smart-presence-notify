@@ -17,7 +17,7 @@ jobs:
             pytest-ha-version: "0.13.367"
           - python-version: "3.14"
             ha-version: "2026.10.2"
-            pytest-ha-version: "0.13.372"
+            pytest-ha-version: "0.13.373"
 
     steps:
       - uses: actions/checkout@v7
