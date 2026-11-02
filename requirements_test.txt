@@ -1,2 +1,2 @@
 pytest-homeassistant-custom-component==0.13.373
-pytest-asyncio==1.4.0
+pytest-asyncio==1.4.1
