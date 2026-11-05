@@ -4,6 +4,9 @@
   "after_dependencies": [
     "logbook"
   ],
+  "categories": [
+    "messaging_notifications.push_notifications"
+  ],
   "codeowners": [
     "@portbusy"
   ],
@@ -16,5 +19,5 @@
   "issue_tracker": "https://github.com/portbusy/smart-presence-notify/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.8.0"
+  "version": "0.8.1"
 }
